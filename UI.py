@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QFont, QPixmap, QImage
-from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtGui import QFont, QPixmap, QRegion, QPainter, QBitmap, QImage
+from PyQt5.QtCore import pyqtSlot, Qt, QRect
 
 import qdarktheme
 import Opener
@@ -10,50 +10,80 @@ path = "C:/Program Files/Marmoset/Toolbag 4/toolbag.exe"
 pyfile = "C:/Users/ichen/Documents/Python Projects/textureConvert/main.py"
 allowedImageFormats = ['.jpg', '.png', '.tga', '.psd', '.psb', '.exr', '.hdr', '.mpic', '.bmp', '.dds', '.tig', '.pfm']
 
+
+class ImageChannels(QWidget):
+    def __init__(self, enableR, enableG, enableB, enableA, parent):
+        super().__init__(parent)
+        self.selectionR = QComboBox(parent)
+        self.selectionR.setFixedSize(20, 10)
+
+
+
 class DropArea(QLabel):
-    def __init__(self, title , sizex, sizey, parent):
+
+
+    def __init__(self, title, sizex, sizey, parent):
         super().__init__(parent)
 
         self.setAcceptDrops(True)
         self.setAlignment(Qt.AlignCenter)
-        self.setText(title)
+        self._defaultText = title
+        self.filePath = ''
+        self.setText(self._defaultText)
         self.setFixedSize(sizex, sizey)
         self.setStyleSheet('border: 2px dashed #aaa')
+        self.mask = QBitmap('mask.png')
+
+
+    def setPixmap(self, image):
+        super().setPixmap(image)
+        super().setStyleSheet('')
+        super().setMask(self.mask)
+        super().setStyleSheet('box-shadow: 3px')
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(10)
+        shadow.setOffset(2)
+        shadow.setColor(Qt.black)
+        super().setGraphicsEffect(shadow)
+
+    def clearPixmap(self):
+        super().setText(self._defaultText)
+        super().setStyleSheet('border: 2px dashed #aaa')
+        super().clearMask()
+        super().setGraphicsEffect(None)
 
     def dragEnterEvent(self, e):
-        mime = e.mimeData().urls()
-        print(mime)
+        urls = e.mimeData().urls()
+
         if e.mimeData().hasUrls():
-            if len(mime) > 1:
+            if len(urls) > 1:
                 e.ignore()
                 return
-            global acc
-            acc = True
-            for url in mime:
-                text = url.toString()
-                if '.png' not in text:
-                    print(text)
-                    acc = False
-                    return
-            if acc:
+            if any(ext in urls[0].toLocalFile() for ext in allowedImageFormats):
                 e.accept()
 
         else:
             e.ignore()
 
     def dropEvent(self, e):
-        self.setText(e.mimeData().text())
+        filePath = e.mimeData().urls()[0].toLocalFile()
+        self.filePath = filePath
+        self.setPixmap(QPixmap(filePath))
+        # self.setText(e.mimeData().text())
+
+    def mouseReleaseEvent(self, e):
+        if e.button() == Qt.RightButton:
+            self.clearPixmap()
 
 
 class MainUI(QWidget):
 
     def __init__(self):
         super().__init__()
-
         self.initUI()
 
     def initUI(self):
-        QToolTip.setFont(QFont('Roboto', 10))
+
 
         btn_browseExe = QPushButton('Browse...', self)
         btn_browseExe.resize(btn_browseExe.sizeHint())
@@ -69,12 +99,19 @@ class MainUI(QWidget):
         btn_Run.resize(btn_browseExe.sizeHint())
         btn_Run.clicked.connect(self.runProcess)
 
-        drop1 = DropArea('Albedo', 100, 100,self)
-        drop2 = DropArea('Metal', 100, 100,self)
-        drop3 = DropArea('Gloss', 100, 100,self)
+        drop1 = DropArea('Albedo', 100, 100, self)
+        drop2 = DropArea('Metal', 100, 100, self)
+        drop3 = DropArea('Gloss', 100, 100, self)
+        channelsSelector1 = ImageChannels(1, 1, 1,1, self)
+        channelsSelector2 = ImageChannels(1, 1, 1,1, self)
+        channelsSelector3 = ImageChannels(1, 1, 1,1, self)
 
-        texturesBox_layout = QHBoxLayout()
-        texturesBox_layout.addWidget(drop1)
+        vertTexturePanel1 = QVBoxLayout(self.parent())
+        vertTexturePanel1.addWidget(drop1)
+        vertTexturePanel1.addWidget(channelsSelector1)
+
+        texturesBox_layout = QHBoxLayout(self.parent())
+        texturesBox_layout.addLayout(vertTexturePanel1)
         texturesBox_layout.addWidget(drop2)
         texturesBox_layout.addWidget(drop3)
 

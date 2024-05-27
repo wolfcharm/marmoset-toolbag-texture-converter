@@ -11,17 +11,19 @@ pyfile = "C:/Users/ichen/Documents/Python Projects/textureConvert/main.py"
 allowedImageFormats = ['.jpg', '.png', '.tga', '.psd', '.psb', '.exr', '.hdr', '.mpic', '.bmp', '.dds', '.tig', '.pfm']
 
 
-class ImageChannels(QWidget):
+class ImageChannels(QLayout):
     def __init__(self, enableR, enableG, enableB, enableA, parent):
         super().__init__(parent)
+
+        self.label = QLabel(parent)
+
         self.selectionR = QComboBox(parent)
         self.selectionR.setFixedSize(20, 10)
 
-
+        self.addWidget(self.label)
+        self.addWidget(self.selectionR)
 
 class DropArea(QLabel):
-
-
     def __init__(self, title, sizex, sizey, parent):
         super().__init__(parent)
 
@@ -76,82 +78,124 @@ class DropArea(QLabel):
             self.clearPixmap()
 
 
-class MainUI(QWidget):
+class MainUI(QMainWindow):
 
     def __init__(self):
-        super().__init__()
-        self.initUI()
+        super(MainUI, self).__init__()
 
-    def initUI(self):
-
-
-        btn_browseExe = QPushButton('Browse...', self)
-        btn_browseExe.resize(btn_browseExe.sizeHint())
-        btn_browseExe.clicked.connect(self.openFileDialog)
-
-        global pathField
-        pathField = QLineEdit(self)
-        pathField.resize(250, 20)
-        pathField.setText(path)
-        pathField.textChanged.connect(self.updatePath)
-
-        btn_Run = QPushButton('Run', self)
-        btn_Run.resize(btn_browseExe.sizeHint())
-        btn_Run.clicked.connect(self.runProcess)
-
-        drop1 = DropArea('Albedo', 100, 100, self)
-        drop2 = DropArea('Metal', 100, 100, self)
-        drop3 = DropArea('Gloss', 100, 100, self)
-        channelsSelector1 = ImageChannels(1, 1, 1,1, self)
-        channelsSelector2 = ImageChannels(1, 1, 1,1, self)
-        channelsSelector3 = ImageChannels(1, 1, 1,1, self)
-
-        vertTexturePanel1 = QVBoxLayout(self.parent())
-        vertTexturePanel1.addWidget(drop1)
-        vertTexturePanel1.addWidget(channelsSelector1)
-
-        texturesBox_layout = QHBoxLayout(self.parent())
-        texturesBox_layout.addLayout(vertTexturePanel1)
-        texturesBox_layout.addWidget(drop2)
-        texturesBox_layout.addWidget(drop3)
-
-        selectExeHBox = QHBoxLayout()
-        selectExeHBox.addWidget(pathField)
-        selectExeHBox.addWidget(btn_browseExe)
-
-        vbox = QVBoxLayout()
-        vbox.addLayout(selectExeHBox)
-        vbox.addLayout(texturesBox_layout)
-        vbox.addStretch(1)
-        vbox.addWidget(btn_Run)
-
-        self.setLayout(vbox)
+        mainWindow = QWidget(self)
+        mainVLayout = QVBoxLayout(self)
 
         self.setGeometry(300, 300, 500, 200)
+
+
+        textureCardHLayout = QHBoxLayout(self)
+        dropAreaAlbedo = DropArea('Albedo', 100, 100, self)
+        textureCardHLayout.addWidget(dropAreaAlbedo)
+        textureChannelsVLayout = QVBoxLayout(self)
+        channelHLayoutR = QHBoxLayout(self)
+        R = QLabel('R', self)
+        channelHLayoutR.addWidget(R)
+        RComboBox = QComboBox(self)
+        channelHLayoutR.addWidget(RComboBox)
+        textureChannelsVLayout.addLayout(channelHLayoutR)
+        textureCardHLayout.addLayout(textureChannelsVLayout)
+
+        mainVLayout.addLayout(textureCardHLayout)
+        spacerItem = QSpacerItem(378, 13, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        buttonRun = QPushButton('Run', self)
+        mainVLayout.addWidget(buttonRun)
+        mainVLayout.addItem(spacerItem)
+
+        mainWindow.setLayout(mainVLayout)
+        self.setCentralWidget(mainWindow)
+
+
+
+        #
+        # btn_browseExe = QPushButton('Browse...', self)
+        # btn_browseExe.resize(btn_browseExe.sizeHint())
+        # btn_browseExe.clicked.connect(self.openFileDialog)
+        #
+        # global pathField
+        # pathField = QLineEdit(self)
+        # # pathField.resize(250, 20)
+        # pathField.setText(path)
+        # pathField.textChanged.connect(self.updatePath)
+        #
+        # btn_Run = QPushButton('Run', self)
+        # btn_Run.resize(btn_browseExe.sizeHint())
+        # btn_Run.clicked.connect(self.runProcess)
+        #
+        # drop1 = DropArea('Albedo', 100, 100, self)
+        # drop2 = DropArea('Metal', 100, 100, self)
+        # drop3 = DropArea('Gloss', 100, 100, self)
+        # channelsSelector1 = ImageChannels(True, True, True,True, self)
+        # channelsSelector2 = ImageChannels(True, True, True,True, self)
+        # channelsSelector3 = ImageChannels(True, True, True,True, self)
+        #
+        # vertTexturePanel1 = QVBoxLayout(self.parent())
+        # vertTexturePanel1.addWidget(drop1)
+        # vertTexturePanel1.addWidget(channelsSelector1)
+        #
+        # vertTexturePanel2 = QVBoxLayout(self.parent())
+        # vertTexturePanel2.addWidget(drop2)
+        # vertTexturePanel2.addWidget(channelsSelector2)
+        #
+        # vertTexturePanel3 = QVBoxLayout(self.parent())
+        # vertTexturePanel3.addWidget(drop3)
+        # vertTexturePanel3.addWidget(channelsSelector3)
+        #
+        # texturesBox_layout = QHBoxLayout(self.parent())
+        # texturesBox_layout.addLayout(vertTexturePanel1)
+        # texturesBox_layout.addLayout(vertTexturePanel2)
+        # texturesBox_layout.addLayout(vertTexturePanel3)
+        # texturesBox_layout.addWidget(drop2)
+        # texturesBox_layout.addWidget(drop3)
+        #
+        # selectExeHBox = QHBoxLayout()
+        # selectExeHBox.setParent(mainLayout)
+        # selectExeHBox.addWidget(pathField)
+        # selectExeHBox.addWidget(btn_browseExe)
+        #
+        # vbox = QVBoxLayout()
+        # vbox.addLayout(selectExeHBox)
+        # vbox.addLayout(texturesBox_layout)
+        # vbox.addStretch(1)
+        # vbox.addWidget(btn_Run)
+        #
+        # mainLayout.addLayout(selectExeHBox)
+        # mainLayout.addStretch()
+        #
+        # widget = QWidget()
+        # widget.setLayout(selectExeHBox)
+        # self.setCentralWidget(widget)
+
+        #self.setGeometry(300, 300, 500, 200)
         self.setWindowTitle('Tooltips')
         self.show()
 
-    @pyqtSlot(name='selectExe')
-    def openFileDialog(self):
-        pathField.setText(self.selectExe())
-        self.updatePath()
-
-    @pyqtSlot(name='runprocess')
-    def runProcess(self):
-        Opener.open_(path, pyfile)
-        print(path)
-
-    def updatePath(self):
-        global path
-        path = pathField.text()
-        print(path)
-
-    def selectExe(self):
-        fileopen = QFileDialog.Options()
-        fileName, _ = QFileDialog.getOpenFileName(self, "Select marmoset.exe", pathField.text(),
-                                                  "Executable (*.exe)", options=fileopen)
-        if fileName:
-            return fileName
+    # @pyqtSlot(name='selectExe')
+    # def openFileDialog(self):
+    #     pathField.setText(self.selectExe())
+    #     self.updatePath()
+    #
+    # @pyqtSlot(name='runprocess')
+    # def runProcess(self):
+    #     Opener.open_(path, pyfile)
+    #     print(path)
+    #
+    # def updatePath(self):
+    #     global path
+    #     path = pathField.text()
+    #     print(path)
+    #
+    # def selectExe(self):
+    #     fileopen = QFileDialog.Options()
+    #     fileName, _ = QFileDialog.getOpenFileName(self, "Select marmoset.exe", pathField.text(),
+    #                                               "Executable (*.exe)", options=fileopen)
+    #     if fileName:
+    #         return fileName
 
 
 if __name__ == '__main__':

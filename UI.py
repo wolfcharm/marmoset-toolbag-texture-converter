@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QFont, QPixmap, QRegion, QPainter, QBitmap, QImage
-from PyQt5.QtCore import pyqtSlot, Qt, QRect
+from PyQt5.QtGui import QPixmap, QBitmap
+from PyQt5.QtCore import pyqtSlot, Qt, pyqtSignal
 
 import qdarktheme
 import Opener
@@ -54,9 +54,12 @@ class ImageChannelsGrayscale(QVBoxLayout):
             self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
 class DropArea(QLabel):
+    clicked = pyqtSignal()
     def __init__(self, title: str, sizex: int, sizey: int, parent):
         super().__init__(parent)
 
+        self.stylSheet = ("QLabel{border-style:dashed; border-color: rgba(255,255,255,50); border-width: 2px;}"
+                          "\nQLabel:hover {border-color: rgba(255,255,255,100)}")
         self.setAcceptDrops(True)
         self.setAlignment(Qt.AlignCenter)
         self._defaultText = title
@@ -65,10 +68,16 @@ class DropArea(QLabel):
         self.sizex = sizex
         self.sizey = sizey
         self.setFixedSize(sizex, sizey)
-        self.setStyleSheet('border: 2px dashed #aaa')
+        self.setStyleSheet(self.stylSheet)
         self.mask = QBitmap('mask.png')
 
 
+    def mouseReleaseEvent(self, e):
+
+        self.clicked.emit()
+
+    def hover(self):
+        super().setStyleSheet('')
     def setPixmap(self, image):
         super().setPixmap(image.scaled(self.sizex,self.sizey,Qt.KeepAspectRatio, 1))
         super().setStyleSheet('')
@@ -82,7 +91,7 @@ class DropArea(QLabel):
 
     def clearPixmap(self):
         super().setText(self._defaultText)
-        super().setStyleSheet('border: 2px dashed #aaa')
+        super().setStyleSheet(self.stylSheet)
         super().clearMask()
         super().setGraphicsEffect(None)
 
@@ -121,6 +130,8 @@ class TextureCard(QHBoxLayout):
         self.textureCardHLayout.addLayout(self.textureChannelsVLayout)
         self.addLayout(self.textureCardHLayout)
         self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
+
+        self.dropAreaAlbedo.clicked.connect(lambda: print('label_2'))
 
 class TextureCardGrayscale(QHBoxLayout):
 
@@ -162,8 +173,8 @@ class MainUI(QMainWindow):
         mainVLayout.addLayout(textureCardAlb)
         mainVLayout.addLayout(textureCardMet)
         mainVLayout.addLayout(textureCardRough)
-        mainVLayout.addLayout(savePathHlayout)
         mainVLayout.addStretch(1)
+        mainVLayout.addLayout(savePathHlayout)
         buttonRun = QPushButton('Run', self)
         buttonRun.clicked.connect(self.runProcess)
         mainVLayout.addWidget(buttonRun)

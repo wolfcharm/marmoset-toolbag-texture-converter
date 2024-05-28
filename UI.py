@@ -46,7 +46,7 @@ class ImageChannels(QVBoxLayout):
 class ImageChannelsGrayscale(QVBoxLayout):
     def __init__(self, enableGrayscale: bool, parent):
         super().__init__(parent)
-        widget = QWidget(parent)
+
         selectionItems = ['R', 'G', 'B', 'A', '1', '0', '1-R', '1-G', '1-B', '1-A']
         if enableGrayscale:
             Gr = ImageChannel('Grayscale', selectionItems, parent)
@@ -141,6 +141,7 @@ class MainUI(QMainWindow):
         super(MainUI, self).__init__()
 
         mainWindow = QWidget(self)
+
         mainVLayout = QVBoxLayout(self)
 
         savePathHlayout = QHBoxLayout(self)

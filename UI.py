@@ -16,7 +16,7 @@ class ImageChannel(QHBoxLayout):
 
         self.label = QLabel(labelName, parent)
         self.selection = QComboBox(parent)
-        self.selection.setFixedSize(50, 10)
+
         self.selection.addItems(selectionItems)
 
         self.addWidget(self.label)
@@ -25,7 +25,6 @@ class ImageChannel(QHBoxLayout):
 class ImageChannels(QVBoxLayout):
     def __init__(self, enableR: bool, enableG: bool, enableB: bool, enableA: bool, parent):
         super().__init__(parent)
-        widget = QWidget(parent)
 
         selectionItems = ['R', 'G', 'B', 'A', '1', '0', '1-R', '1-G', '1-B', '1-A']
         if enableR:
@@ -41,6 +40,8 @@ class ImageChannels(QVBoxLayout):
             A = ImageChannel('A', selectionItems, parent)
             self.addLayout(A)
 
+        self.addSpacerItem(QSpacerItem(1,1, QSizePolicy.Policy.Expanding))
+
 
 class ImageChannelsGrayscale(QVBoxLayout):
     def __init__(self, enableGrayscale: bool, parent):
@@ -50,7 +51,7 @@ class ImageChannelsGrayscale(QVBoxLayout):
         if enableGrayscale:
             Gr = ImageChannel('Grayscale', selectionItems, parent)
             self.addLayout(Gr)
-
+            self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
 class DropArea(QLabel):
     def __init__(self, title: str, sizex: int, sizey: int, parent):
@@ -119,6 +120,7 @@ class TextureCard(QHBoxLayout):
 
         self.textureCardHLayout.addLayout(self.textureChannelsVLayout)
         self.addLayout(self.textureCardHLayout)
+        self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
 class TextureCardGrayscale(QHBoxLayout):
 
@@ -131,6 +133,7 @@ class TextureCardGrayscale(QHBoxLayout):
 
         self.textureCardHLayout.addLayout(self.textureChannelsVLayout)
         self.addLayout(self.textureCardHLayout)
+        self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
 class MainUI(QMainWindow):
 

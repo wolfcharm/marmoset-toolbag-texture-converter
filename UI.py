@@ -1,6 +1,6 @@
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QBitmap
+from PyQt5.QtGui import QPixmap, QBitmap, QImage
 from PyQt5.QtCore import pyqtSlot, Qt, pyqtSignal
 
 import qdarktheme
@@ -54,7 +54,6 @@ class ImageChannelsGrayscale(QVBoxLayout):
             self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
 class DropArea(QLabel):
-    clicked = pyqtSignal()
     def __init__(self, title: str, sizex: int, sizey: int, parent):
         super().__init__(parent)
 
@@ -70,15 +69,25 @@ class DropArea(QLabel):
         self.setFixedSize(sizex, sizey)
         self.setStyleSheet(self.stylSheet)
         self.mask = QBitmap('mask.png')
+        self.setOpenExternalLinks(True)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            file = self.openFileSelectDialog()
+            if not file: return
+            self.filePath = file
+            self.setPixmap(QPixmap(file))
+
+    def openFileSelectDialog(self):
+        fileopen = QFileDialog.Options()
+        filter_ = "Images (*{0})".format(' *'.join(allowedImageFormats))
+        fileName, _ = QFileDialog.getOpenFileName(self, "Select Image", '',
+                                                  filter_, options=fileopen)
+        if fileName:
+            return fileName
 
 
-    def mouseReleaseEvent(self, e):
-
-        self.clicked.emit()
-
-    def hover(self):
-        super().setStyleSheet('')
-    def setPixmap(self, image):
+    def setPixmap(self, image: QPixmap):
         super().setPixmap(image.scaled(self.sizex,self.sizey,Qt.KeepAspectRatio, 1))
         super().setStyleSheet('')
         super().setMask(self.mask)
@@ -131,7 +140,6 @@ class TextureCard(QHBoxLayout):
         self.addLayout(self.textureCardHLayout)
         self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
-        self.dropAreaAlbedo.clicked.connect(lambda: print('label_2'))
 
 class TextureCardGrayscale(QHBoxLayout):
 

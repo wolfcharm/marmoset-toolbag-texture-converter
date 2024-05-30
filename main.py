@@ -1,20 +1,35 @@
 import sys
 import os
 from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QBitmap, QPainter, QBrush, QColor
+from PyQt5.QtGui import QPixmap, QBitmap, QColor, QWindow
 from PyQt5.QtCore import pyqtSlot, Qt, QEvent
 
 import qdarktheme
 import Opener
+import StoredSettings
+from StoredSettings import Settings
+from os.path import exists
 
-marmosetPath = ''
-pyfile = "MarmosetBaker.py"
 allowedImageFormats = ['.jpg', '.png', '.tga', '.psd', '.psb', '.exr', '.hdr', '.mpic', '.bmp', '.dds', '.tig', '.pfm']
 savePath = ''
 
-def SetDefaultMarmosetPath():
-    global marmosetPath
-    marmosetPath = os.getenv("SystemDrive")+"/Program Files/Marmoset/Toolbag 4/toolbag.exe"
+def CheckMissingSettings():
+    path = os.getenv("SystemDrive")+"/Program Files/Marmoset/Toolbag 4/toolbag.exea"
+    if not Settings.marmosetPath:
+        if not exists(path):
+            qdarktheme.setup_theme("auto")
+            popup = QMessageBox(ui)
+            popup.setWindowTitle('Warning')
+            popup.setFixedSize(600,200)
+            popup.setText("toolbag.exe not found. Dou You want to specify path to Marmoset now?")
+            popup.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+            result = popup.exec_()
+            if result == QMessageBox.Yes:
+                ui.openSettings()
+        else:
+            Settings.marmosetPath = path
+            StoredSettings.Save()
+
 class ImageChannel(QHBoxLayout):
     def __init__(self, labelName: str, selectionItems: list, parent):
         super().__init__(parent)
@@ -46,7 +61,6 @@ class ImageChannels(QVBoxLayout):
             self.addLayout(A)
 
         self.addSpacerItem(QSpacerItem(1,1, QSizePolicy.Policy.Expanding))
-
 
 class ImageChannelsGrayscale(QVBoxLayout):
     def __init__(self, enableGrayscale: bool, parent):
@@ -168,6 +182,11 @@ class TextureCardGrayscale(QHBoxLayout):
         self.addLayout(self.textureCardHLayout)
         self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
+class SettingsWindow(QWindow):
+    def __init__(self):
+        QWindow.__init__(self)
+        self.setGeometry(0,0, 400, 400)
+
 class MainUI(QMainWindow):
 
     def __init__(self):
@@ -216,8 +235,8 @@ class MainUI(QMainWindow):
     #
     @pyqtSlot(name='runprocess')
     def runProcess(self):
-        Opener.open_(marmosetPath, pyfile)
-        print(marmosetPath)
+        Opener.open_(Settings.marmosetPath, Settings.pyfile)
+        print(Settings.marmosetPath)
 
     # def updatePath(self):
     #     global path
@@ -240,10 +259,17 @@ class MainUI(QMainWindow):
             path = self.pathField.text()
             print(path)
 
+    def openSettings(self):
+        settings = SettingsWindow()
+        settings.show()
+        print('setting opened')
+
+
 if __name__ == '__main__':
     qdarktheme.enable_hi_dpi()
     app = QApplication(sys.argv)
     qdarktheme.setup_theme("auto")
-    SetDefaultMarmosetPath()
+    StoredSettings.Init()
     ui = MainUI()
+    CheckMissingSettings()
     sys.exit(app.exec_())

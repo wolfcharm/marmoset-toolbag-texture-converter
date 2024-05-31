@@ -2,7 +2,7 @@ import sys
 import os
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QPixmap, QBitmap, QColor, QWindow
-from PyQt5.QtCore import pyqtSlot, Qt, QEvent
+from PyQt5.QtCore import pyqtSlot, Qt, QEvent, QRect, QCoreApplication
 
 import qdarktheme
 import Opener
@@ -36,6 +36,7 @@ class ImageChannel(QHBoxLayout):
 
         self.label = QLabel(labelName, parent)
         self.selection = QComboBox(parent)
+        self.selection.setCursor(Qt.PointingHandCursor)
 
         self.selection.addItems(selectionItems)
 
@@ -76,6 +77,7 @@ class DropArea(QLabel):
     def __init__(self, title: str, sizex: int, sizey: int, parent):
         super().__init__(parent)
 
+        self.setCursor(Qt.PointingHandCursor)
         self.stylSheet = ("QLabel{border-style:dashed; border-color: rgba(255,255,255,50); border-width: 2px;}"
                           "\nQLabel:hover {border-color: rgba(255,255,255,100)}")
         self.setAcceptDrops(True)
@@ -236,8 +238,33 @@ class MainUI(QMainWindow):
         super(MainUI, self).__init__()
 
         mainWindow = QWidget(self)
-
         mainVLayout = QVBoxLayout(self)
+
+        self.menubar = QMenuBar(self)
+        self.menubar.setGeometry(QRect(0, 0, 800, 26))
+        self.menubar.setObjectName("menubar")
+        self.menuFile = QMenu(self.menubar)
+        self.menuFile.setObjectName("menuFile")
+        self.menuEdit = QMenu(self.menubar)
+        self.menuEdit.setObjectName("menuEdit")
+        self.setMenuBar(self.menubar)
+        self.statusbar = QStatusBar(self)
+        self.statusbar.setObjectName("statusbar")
+        self.setStatusBar(self.statusbar)
+        self.actionCopy = QAction(self)
+        self.actionCopy.setObjectName("actionCopy")
+        self.actionPaste = QAction(self)
+        self.actionPaste.setObjectName("actionPaste")
+        self.actionSave = QAction(self)
+        self.actionSave.setObjectName("actionSave")
+        self.actionNew = QAction(self)
+        self.actionNew.setObjectName("actionNew")
+        self.menuFile.addAction(self.actionNew)
+        self.menuFile.addAction(self.actionSave)
+        self.menuEdit.addAction(self.actionCopy)
+        self.menuEdit.addAction(self.actionPaste)
+        self.menubar.addAction(self.menuFile.menuAction())
+        self.menubar.addAction(self.menuEdit.menuAction())
 
         savePathHlayout = QHBoxLayout(self)
         savePathLabel = QLabel("Save Location", self)
@@ -247,6 +274,7 @@ class MainUI(QMainWindow):
         self.pathField.textChanged.connect(self.updateSavePath)
         btn_browseSavePath = QPushButton('Browse...', self)
         btn_browseSavePath.clicked.connect(self.selectSavePath)
+        btn_browseSavePath.setCursor(Qt.PointingHandCursor)
         savePathHlayout.addWidget(savePathLabel)
         savePathHlayout.addWidget(self.pathField)
         savePathHlayout.addWidget(btn_browseSavePath)
@@ -262,6 +290,7 @@ class MainUI(QMainWindow):
         mainVLayout.addStretch(1)
         mainVLayout.addLayout(savePathHlayout)
         buttonRun = QPushButton('Run', self)
+        buttonRun.setCursor(Qt.PointingHandCursor)
         buttonRun.clicked.connect(self.runProcess)
         mainVLayout.addWidget(buttonRun)
 
@@ -272,6 +301,7 @@ class MainUI(QMainWindow):
         self.show()
 
         self.settings = SettingsWindow()
+
 
     def showOpenErrorDialog(self):
         popup = QMessageBox(self)

@@ -9,19 +9,19 @@ class Settings:
 def Init():
     config = ConfigParser()
     config.read(configFile)
-    AddSection(config, 'Paths')
+    SafeAddSection(config, 'Paths')
     with open(configFile, 'w') as f:
         config.write(f)
     Save()
     Load()
 
 def Load():
-    config = ConfigParser()
+    config = ConfigParser(allow_no_value=True)
     config.read(configFile)
-    Settings.marmosetPath = config.get('Paths', 'marmosetPath')
+    Settings.marmosetPath = SafeGetOption(config, 'Paths', 'marmosetPath')
 
 def LoadArguments(*args: str):
-    config = ConfigParser()
+    config = ConfigParser(allow_no_value=True)
     config.read(configFile)
     for arg in args:
         arg = config.get('', arg)
@@ -43,9 +43,15 @@ def Save():
     with open(configFile, 'w') as f:
         config.write(f)
 
-def AddSection(config, name: str):
+def SafeAddSection(config, name: str):
     sections = config.sections()
     if name in sections:
         return
     else:
         config.add_section('Paths')
+
+def SafeGetOption(config, section: str, name: str):
+    if config.has_option(section, name):
+        return config.get(section, name)
+    else:
+        return ''

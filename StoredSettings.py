@@ -19,7 +19,6 @@ def Load():
     config = ConfigParser()
     config.read(configFile)
     Settings.marmosetPath = config.get('Paths', 'marmosetPath')
-    Settings.pyfile = config.get('Paths', 'pyfile')
 
 def LoadArguments(*args: str):
     config = ConfigParser()
@@ -28,19 +27,19 @@ def LoadArguments(*args: str):
         arg = config.get('', arg)
     return args
 
-def SaveArguments(section:str, *args):
+def SaveArguments(section: str, **kwargs):
     config = ConfigParser()
     config.read(configFile)
-    for arg in args:
-        config.set(section, arg)
+    for key, value in kwargs.items():
+        config.set(section, key, value)
     with open(configFile, 'w') as f:
         config.write(f)
 
 def Save():
     config = ConfigParser()
     config.read(configFile)
-    config.set('Paths', 'marmosetPath', Settings.marmosetPath)
-    config.set('Paths','pyfile', Settings.pyfile)
+    if Settings.marmosetPath != "":
+        config.set('Paths', 'marmosetPath', Settings.marmosetPath)
     with open(configFile, 'w') as f:
         config.write(f)
 

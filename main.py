@@ -14,13 +14,13 @@ allowedImageFormats = ['.jpg', '.png', '.tga', '.psd', '.psb', '.exr', '.hdr', '
 savePath = ''
 
 def CheckMissingSettings():
-    path = os.getenv("SystemDrive")+"/Program Files/Marmoset/Toolbag 4/toolbag.exea"
+    path = os.getenv("SystemDrive")+"/Program Files/Marmoset/Toolbag 4/toolbag.exe"
     if not Settings.marmosetPath:
         if not exists(path):
             qdarktheme.setup_theme("auto")
             popup = QMessageBox(ui)
             popup.setWindowTitle('Warning')
-            popup.setFixedSize(600,200)
+            popup.setFixedSize(600, 200)
             popup.setText("toolbag.exe not found. Dou You want to specify path to Marmoset now?")
             popup.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
             result = popup.exec_()
@@ -182,10 +182,53 @@ class TextureCardGrayscale(QHBoxLayout):
         self.addLayout(self.textureCardHLayout)
         self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
-class SettingsWindow(QWindow):
+class SettingsWindow(QWidget):
     def __init__(self):
-        QWindow.__init__(self)
-        self.setGeometry(0,0, 400, 400)
+        super().__init__()
+        self.setWindowTitle("Settings")
+        self.setMinimumSize(600, 50)
+        #self.setGeometry(0, 0, 400, 400)
+        layout = QVBoxLayout()
+
+        marmosetSelectExeLayout = QHBoxLayout()
+        labelMarmosetPath = QLabel('Marmoset path', self)
+        self.fieldMarmosetPath = QLineEdit(self)
+        btnSelectMarmosetFile = QPushButton('Browse...', self)
+        btnSelectMarmosetFile.clicked.connect(self.openFileDialog)
+        marmosetSelectExeLayout.addWidget(labelMarmosetPath)
+        marmosetSelectExeLayout.addWidget(self.fieldMarmosetPath)
+        marmosetSelectExeLayout.addWidget(btnSelectMarmosetFile)
+
+        saveBtnLayout = QHBoxLayout()
+        btnSave = QPushButton('Save', self)
+        btnSave.setMaximumWidth(100)
+        btnSave.clicked.connect(self.saveSettings)
+        saveBtnLayout.addWidget(btnSave)
+
+        layout.addLayout(marmosetSelectExeLayout)
+        layout.addLayout(saveBtnLayout)
+        self.setLayout(layout)
+
+    @pyqtSlot(name='selectExe')
+    def openFileDialog(self):
+        fileName = self.selectExe()
+        if not fileName:
+            return
+        else:
+            self.fieldMarmosetPath.setText(fileName)
+
+    def selectExe(self):
+        fileopen = QFileDialog.Options()
+        fileName, _ = QFileDialog.getOpenFileName(self, "Select toolbag.exe", self.fieldMarmosetPath.text(),
+                                                  "Executable (*.exe)", options=fileopen)
+        if fileName:
+            return fileName
+
+    def saveSettings(self):
+        Settings.marmosetPath = self.fieldMarmosetPath.text()
+        StoredSettings.Save()
+        self.close()
+        pass
 
 class MainUI(QMainWindow):
 
@@ -228,27 +271,21 @@ class MainUI(QMainWindow):
         self.setWindowTitle('Marmoset texture converter')
         self.show()
 
-    # @pyqtSlot(name='selectExe')
-    # def openFileDialog(self):
-    #     pathField.setText(self.selectExe())
-    #     self.updatePath()
-    #
+        self.settings = SettingsWindow()
+
+    def showOpenErrorDialog(self):
+        popup = QMessageBox(self)
+        popup.setWindowTitle('Error!')
+        popup.setIcon(QMessageBox.Critical)
+        popup.setFixedSize(600, 200)
+        popup.setText("Selected .exe is not Toolbag application! Set proper .exe in Settings")
+        popup.setStandardButtons(QMessageBox.Ok)
+        popup.exec_()
+
     @pyqtSlot(name='runprocess')
     def runProcess(self):
-        Opener.open_(Settings.marmosetPath, Settings.pyfile)
-        print(Settings.marmosetPath)
+        Opener.open_(Settings.marmosetPath, Settings.pyfile, self)
 
-    # def updatePath(self):
-    #     global path
-    #     path = pathField.text()
-    #     print(path)
-    #
-    # def selectExe(self):
-    #     fileopen = QFileDialog.Options()
-    #     fileName, _ = QFileDialog.getOpenFileName(self, "Select marmoset.exe", pathField.text(),
-    #                                               "Executable (*.exe)", options=fileopen)
-    #     if fileName:
-    #         return fileName
     def selectSavePath(self):
         savePath_ = str(QFileDialog.getExistingDirectory(self, "Select Save Directory"))
         if savePath_:
@@ -260,8 +297,7 @@ class MainUI(QMainWindow):
             print(path)
 
     def openSettings(self):
-        settings = SettingsWindow()
-        settings.show()
+        self.settings.show()
         print('setting opened')
 
 

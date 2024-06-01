@@ -95,12 +95,17 @@ class DropArea(QLabel):
         self.pix_light: QPixmap = QPixmap()
         self.setOpenExternalLinks(True)
 
+        parent.fileMenu.addAction("Set {0} Texture...".format(title), self.selectTexture)
+
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            file = self.openFileSelectDialog()
-            if not file: return
-            self.filePath = file
-            self.setPixmap(QPixmap(file))
+            self.selectTexture()
+
+    def selectTexture(self):
+        file = self.openFileSelectDialog()
+        if not file: return
+        self.filePath = file
+        self.setPixmap(QPixmap(file))
 
     def openFileSelectDialog(self):
         fileopen = QFileDialog.Options()
@@ -162,13 +167,13 @@ class TextureCard(QHBoxLayout):
     def __init__(self, title: str, previewsizex: int, previewsizey: int, displaychannelR: bool, displaychannelG: bool, displaychannelB: bool, displaychannelA: bool, parent):
         super().__init__(parent)
 
-        self.textureCardHLayout = QHBoxLayout(parent)
-        self.dropAreaAlbedo = DropArea(title, previewsizex, previewsizey, parent)
-        self.textureCardHLayout.addWidget(self.dropAreaAlbedo)
-        self.textureChannelsVLayout = ImageChannels(displaychannelR, displaychannelG, displaychannelB, displaychannelA, parent)
+        textureCardHLayout = QHBoxLayout(parent)
+        self.dropArea = DropArea(title, previewsizex, previewsizey, parent)
+        textureCardHLayout.addWidget(self.dropArea)
+        textureChannelsVLayout = ImageChannels(displaychannelR, displaychannelG, displaychannelB, displaychannelA, parent)
 
-        self.textureCardHLayout.addLayout(self.textureChannelsVLayout)
-        self.addLayout(self.textureCardHLayout)
+        textureCardHLayout.addLayout(textureChannelsVLayout)
+        self.addLayout(textureCardHLayout)
         self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
 class TextureCardGrayscale(QHBoxLayout):
@@ -205,7 +210,6 @@ class SettingsWindow(QWidget):
         separator = QFrame(self)
         separator.setGeometry(QRect(0, 0, 100, 1))
         separator.setFrameShape(QFrame.HLine)
-        separator.setFrameShadow(QFrame.Sunken)
 
         saveBtnLayout = QHBoxLayout()
         btnSave = QPushButton('Save', self)
@@ -250,17 +254,10 @@ class MainUI(QMainWindow):
         mainVLayout = QVBoxLayout(self)
 
         menuBar = QMenuBar(self)
-        fileMenu = menuBar.addMenu("File")
-        fileMenu.addAction("Set Albedo Texture...")
-        fileMenu.addAction("Set Metallic Texture...")
-        fileMenu.addAction("Set Roughness Texture...")
-
-        editMenu = menuBar.addMenu("Edit")
-        editMenu.addAction("Preferences", self.openSettings)
-
-
+        self.fileMenu = menuBar.addMenu("File")
+        self.editMenu = menuBar.addMenu("Edit")
+        self.editMenu.addAction("Preferences...", self.openSettings)
         self.setMenuBar(menuBar)
-
 
         savePathHlayout = QHBoxLayout(self)
         savePathLabel = QLabel("Save Location", self)
@@ -275,14 +272,16 @@ class MainUI(QMainWindow):
         savePathHlayout.addWidget(self.pathField)
         savePathHlayout.addWidget(btn_browseSavePath)
 
+        self.textureCardAlb = TextureCard('Albedo', 150, 150, False, False, False, False, self)
+        self.textureCardMet = TextureCardGrayscale('Metal', 150, 150, True, self)
+        self.textureCardRough = TextureCardGrayscale('Roughness', 150, 150, True, self)
 
-        textureCardAlb = TextureCard('Albedo', 150, 150, False, False, False, False, self)
-        textureCardMet = TextureCardGrayscale('Metal', 150, 150, True, self)
-        textureCardRough = TextureCardGrayscale('Roughness', 150, 150, True, self)
+        self.fileMenu.addSeparator()
+        self.fileMenu.addAction("Quit", lambda: QCoreApplication.quit())
 
-        mainVLayout.addLayout(textureCardAlb)
-        mainVLayout.addLayout(textureCardMet)
-        mainVLayout.addLayout(textureCardRough)
+        mainVLayout.addLayout(self.textureCardAlb)
+        mainVLayout.addLayout(self.textureCardMet)
+        mainVLayout.addLayout(self.textureCardRough)
         mainVLayout.addStretch(1)
         mainVLayout.addLayout(savePathHlayout)
         buttonRun = QPushButton('Run', self)
@@ -298,6 +297,9 @@ class MainUI(QMainWindow):
 
         self.settings = SettingsWindow()
 
+    def openAlbDrop(self, dropArea: QLabel):
+        print(dropArea.text())
+        pass
 
     def showOpenErrorDialog(self):
         popup = QMessageBox(self)

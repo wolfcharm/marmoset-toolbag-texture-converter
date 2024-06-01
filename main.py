@@ -190,16 +190,22 @@ class SettingsWindow(QWidget):
         self.setWindowTitle("Settings")
         self.setMinimumSize(600, 50)
         #self.setGeometry(0, 0, 400, 400)
-        layout = QVBoxLayout()
+        mainLayout = QVBoxLayout()
 
         marmosetSelectExeLayout = QHBoxLayout()
         labelMarmosetPath = QLabel('Marmoset path', self)
         self.fieldMarmosetPath = QLineEdit(self)
+        self.fieldMarmosetPath.setEnabled(False)
         btnSelectMarmosetFile = QPushButton('Browse...', self)
         btnSelectMarmosetFile.clicked.connect(self.openFileDialog)
         marmosetSelectExeLayout.addWidget(labelMarmosetPath)
         marmosetSelectExeLayout.addWidget(self.fieldMarmosetPath)
         marmosetSelectExeLayout.addWidget(btnSelectMarmosetFile)
+
+        separator = QFrame(self)
+        separator.setGeometry(QRect(0, 0, 100, 1))
+        separator.setFrameShape(QFrame.HLine)
+        separator.setFrameShadow(QFrame.Sunken)
 
         saveBtnLayout = QHBoxLayout()
         btnSave = QPushButton('Save', self)
@@ -207,9 +213,10 @@ class SettingsWindow(QWidget):
         btnSave.clicked.connect(self.saveSettings)
         saveBtnLayout.addWidget(btnSave)
 
-        layout.addLayout(marmosetSelectExeLayout)
-        layout.addLayout(saveBtnLayout)
-        self.setLayout(layout)
+        mainLayout.addLayout(marmosetSelectExeLayout)
+        mainLayout.addWidget(separator)
+        mainLayout.addLayout(saveBtnLayout)
+        self.setLayout(mainLayout)
 
     @pyqtSlot(name='selectExe')
     def openFileDialog(self):
@@ -230,7 +237,9 @@ class SettingsWindow(QWidget):
         Settings.marmosetPath = self.fieldMarmosetPath.text()
         StoredSettings.Save()
         self.close()
-        pass
+
+    def update(self):
+        self.fieldMarmosetPath.setText(Settings.marmosetPath)
 
 class MainUI(QMainWindow):
 
@@ -240,31 +249,18 @@ class MainUI(QMainWindow):
         mainWindow = QWidget(self)
         mainVLayout = QVBoxLayout(self)
 
-        self.menubar = QMenuBar(self)
-        self.menubar.setGeometry(QRect(0, 0, 800, 26))
-        self.menubar.setObjectName("menubar")
-        self.menuFile = QMenu(self.menubar)
-        self.menuFile.setObjectName("menuFile")
-        self.menuEdit = QMenu(self.menubar)
-        self.menuEdit.setObjectName("menuEdit")
-        self.setMenuBar(self.menubar)
-        self.statusbar = QStatusBar(self)
-        self.statusbar.setObjectName("statusbar")
-        self.setStatusBar(self.statusbar)
-        self.actionCopy = QAction(self)
-        self.actionCopy.setObjectName("actionCopy")
-        self.actionPaste = QAction(self)
-        self.actionPaste.setObjectName("actionPaste")
-        self.actionSave = QAction(self)
-        self.actionSave.setObjectName("actionSave")
-        self.actionNew = QAction(self)
-        self.actionNew.setObjectName("actionNew")
-        self.menuFile.addAction(self.actionNew)
-        self.menuFile.addAction(self.actionSave)
-        self.menuEdit.addAction(self.actionCopy)
-        self.menuEdit.addAction(self.actionPaste)
-        self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuEdit.menuAction())
+        menuBar = QMenuBar(self)
+        fileMenu = menuBar.addMenu("File")
+        fileMenu.addAction("Set Albedo Texture...")
+        fileMenu.addAction("Set Metallic Texture...")
+        fileMenu.addAction("Set Roughness Texture...")
+
+        editMenu = menuBar.addMenu("Edit")
+        editMenu.addAction("Preferences", self.openSettings)
+
+
+        self.setMenuBar(menuBar)
+
 
         savePathHlayout = QHBoxLayout(self)
         savePathLabel = QLabel("Save Location", self)
@@ -328,7 +324,7 @@ class MainUI(QMainWindow):
 
     def openSettings(self):
         self.settings.show()
-        print('setting opened')
+        self.settings.update()
 
 
 if __name__ == '__main__':

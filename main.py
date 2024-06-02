@@ -1,14 +1,17 @@
 import sys
 import os
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QPixmap, QBitmap, QColor, QWindow
-from PyQt5.QtCore import pyqtSlot, Qt, QEvent, QRect, QCoreApplication
+from PyQt6.QtWidgets import *
+from PyQt6.QtGui import QPixmap, QBitmap, QColor, QWindow
+from PyQt6.QtCore import pyqtSlot, Qt, QEvent, QRect, QCoreApplication, QSize
 
 import qdarktheme
 import Opener
 import StoredSettings
 from StoredSettings import Settings
 from os.path import exists
+import Debugger
+
+Debugger.enabled = True
 
 allowedImageFormats = ['.jpg', '.png', '.tga', '.psd', '.psb', '.exr', '.hdr', '.mpic', '.bmp', '.dds', '.tig', '.pfm']
 savePath = ''
@@ -22,9 +25,9 @@ def CheckMissingSettings():
             popup.setWindowTitle('Warning')
             popup.setFixedSize(600, 200)
             popup.setText("toolbag.exe not found. Dou You want to specify path to Marmoset now?")
-            popup.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-            result = popup.exec_()
-            if result == QMessageBox.Yes:
+            popup.setStandardButtons(QMessageBox.StandardButton.Yes| QMessageBox.StandardButton.No)
+            result = popup.exec()
+            if result == QMessageBox.StandardButton.Yes:
                 ui.openSettings()
         else:
             Settings.marmosetPath = path
@@ -36,7 +39,7 @@ class ImageChannel(QHBoxLayout):
 
         self.label = QLabel(labelName, parent)
         self.selection = QComboBox(parent)
-        self.selection.setCursor(Qt.PointingHandCursor)
+        self.selection.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.selection.addItems(selectionItems)
 
@@ -77,11 +80,11 @@ class DropArea(QLabel):
     def __init__(self, title: str, sizex: int, sizey: int, parent):
         super().__init__(parent)
 
-        self.setCursor(Qt.PointingHandCursor)
-        self.stylSheet = ("QLabel{border-style:dashed; border-color: rgba(255,255,255,50); border-width: 2px;}"
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.styleSheet = ("QLabel{border-style:dashed; border-color: rgba(255,255,255,50); border-width: 2px;}"
                           "\nQLabel:hover {border-color: rgba(255,255,255,100)}")
         self.setAcceptDrops(True)
-        self.setAlignment(Qt.AlignCenter)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._defaultText = title
         self.filePath = ''
         self.fileAssigned = False
@@ -89,7 +92,7 @@ class DropArea(QLabel):
         self.sizex = sizex
         self.sizey = sizey
         self.setFixedSize(sizex, sizey)
-        self.setStyleSheet(self.stylSheet)
+        self.setStyleSheet(self.styleSheet)
         self.mask = QBitmap('mask.png')
         self.pix: QPixmap = QPixmap()
         self.pix_light: QPixmap = QPixmap()
@@ -98,7 +101,7 @@ class DropArea(QLabel):
         parent.fileMenu.addAction("Set {0} Texture...".format(title), self.selectTexture)
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.selectTexture()
 
     def selectTexture(self):
@@ -108,22 +111,22 @@ class DropArea(QLabel):
         self.setPixmap(QPixmap(file))
 
     def openFileSelectDialog(self):
-        fileopen = QFileDialog.Options()
         filter_ = "Images (*{0})".format(' *'.join(allowedImageFormats))
         fileName, _ = QFileDialog.getOpenFileName(self, "Select Image", '',
-                                                  filter_, options=fileopen)
+                                                  filter_)
         if fileName:
             return fileName
 
     def setPixmap(self, image: QPixmap):
         self.pix = image
-        super().setPixmap(image.scaled(self.sizex,self.sizey,Qt.KeepAspectRatio, 1))
+        scaled = QPixmap.scaled(image, self.sizex, self.sizey, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        super().setPixmap(scaled)
         super().setMask(self.mask)
         super().setStyleSheet('')
         shadow = QGraphicsDropShadowEffect(self)
         shadow.setBlurRadius(10)
         shadow.setOffset(2)
-        shadow.setColor(Qt.black)
+        shadow.setColor(Qt.GlobalColor.black)
         super().setGraphicsEffect(shadow)
         self.fileAssigned = True
 
@@ -135,7 +138,7 @@ class DropArea(QLabel):
 
     def clearPixmap(self):
         super().setText(self._defaultText)
-        super().setStyleSheet(self.stylSheet)
+        super().setStyleSheet(self.styleSheet)
         super().clearMask()
         super().setGraphicsEffect(None)
         self.fileAssigned = False
@@ -160,7 +163,7 @@ class DropArea(QLabel):
         # self.setText(e.mimeData().text())
 
     def mouseReleaseEvent(self, e):
-        if e.button() == Qt.RightButton:
+        if e.button() == Qt.MouseButton.RightButton:
             self.clearPixmap()
 
 class TextureCard(QHBoxLayout):
@@ -209,7 +212,7 @@ class SettingsWindow(QWidget):
 
         separator = QFrame(self)
         separator.setGeometry(QRect(0, 0, 100, 1))
-        separator.setFrameShape(QFrame.HLine)
+        separator.setFrameShape(QFrame.Shape.HLine)
 
         saveBtnLayout = QHBoxLayout()
         btnSave = QPushButton('Save', self)
@@ -224,6 +227,7 @@ class SettingsWindow(QWidget):
 
     @pyqtSlot(name='selectExe')
     def openFileDialog(self):
+        Debugger.debugger_print('pressed')
         fileName = self.selectExe()
         if not fileName:
             return
@@ -231,9 +235,8 @@ class SettingsWindow(QWidget):
             self.fieldMarmosetPath.setText(fileName)
 
     def selectExe(self):
-        fileopen = QFileDialog.Options()
         fileName, _ = QFileDialog.getOpenFileName(self, "Select toolbag.exe", self.fieldMarmosetPath.text(),
-                                                  "Executable (*.exe)", options=fileopen)
+                                                  "Executable (*.exe)")
         if fileName:
             return fileName
 
@@ -267,7 +270,7 @@ class MainUI(QMainWindow):
         self.pathField.textChanged.connect(self.updateSavePath)
         btn_browseSavePath = QPushButton('Browse...', self)
         btn_browseSavePath.clicked.connect(self.selectSavePath)
-        btn_browseSavePath.setCursor(Qt.PointingHandCursor)
+        btn_browseSavePath.setCursor(Qt.CursorShape.PointingHandCursor)
         savePathHlayout.addWidget(savePathLabel)
         savePathHlayout.addWidget(self.pathField)
         savePathHlayout.addWidget(btn_browseSavePath)
@@ -285,7 +288,7 @@ class MainUI(QMainWindow):
         mainVLayout.addStretch(1)
         mainVLayout.addLayout(savePathHlayout)
         buttonRun = QPushButton('Run', self)
-        buttonRun.setCursor(Qt.PointingHandCursor)
+        buttonRun.setCursor(Qt.CursorShape.PointingHandCursor)
         buttonRun.clicked.connect(self.runProcess)
         mainVLayout.addWidget(buttonRun)
 
@@ -298,7 +301,7 @@ class MainUI(QMainWindow):
         self.settings = SettingsWindow()
 
     def openAlbDrop(self, dropArea: QLabel):
-        print(dropArea.text())
+        Debugger.debugger_print(dropArea.text())
         pass
 
     def showOpenErrorDialog(self):
@@ -322,7 +325,7 @@ class MainUI(QMainWindow):
     def updateSavePath(self):
             global savePath
             path = self.pathField.text()
-            print(path)
+            Debugger.debugger_print(path)
 
     def openSettings(self):
         self.settings.show()
@@ -336,4 +339,4 @@ if __name__ == '__main__':
     StoredSettings.Init()
     ui = MainUI()
     CheckMissingSettings()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

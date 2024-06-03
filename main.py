@@ -17,6 +17,7 @@ allowedImageFormats = ['.jpg', '.png', '.tga', '.psd', '.psb', '.exr', '.hdr', '
 savePath = ''
 
 def CheckMissingSettings():
+
     path = os.getenv("SystemDrive")+"/Program Files/Marmoset/Toolbag 4/toolbag.exe"
     if not Settings.marmosetPath:
         if not exists(path):
@@ -25,7 +26,7 @@ def CheckMissingSettings():
             popup.setWindowTitle('Warning')
             popup.setFixedSize(600, 200)
             popup.setText("toolbag.exe not found. Dou You want to specify path to Marmoset now?")
-            popup.setStandardButtons(QMessageBox.StandardButton.Yes| QMessageBox.StandardButton.No)
+            popup.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
             result = popup.exec()
             if result == QMessageBox.StandardButton.Yes:
                 ui.openSettings()
@@ -82,7 +83,7 @@ class DropArea(QLabel):
 
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.styleSheet = ("QLabel{border-style:dashed; border-color: rgba(255,255,255,50); border-width: 2px;}"
-                          "\nQLabel:hover {border-color: rgba(255,255,255,100)}")
+                           "\nQLabel:hover {border-color: rgba(255,255,255,100)}")
         self.setAcceptDrops(True)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._defaultText = title

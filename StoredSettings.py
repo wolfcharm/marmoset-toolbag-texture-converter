@@ -1,4 +1,5 @@
 from configparser import ConfigParser
+import Debugger
 
 configFile = 'settings.ini'
 
@@ -20,17 +21,24 @@ def Load():
     config.read(configFile)
     Settings.marmosetPath = SafeGetOption(config, 'Paths', 'marmosetPath')
 
-def LoadArguments(*args: str):
+def LoadArguments(section: str, arg: str, *args: str):
     config = ConfigParser(allow_no_value=True)
     config.read(configFile)
-    for arg in args:
-        arg = config.get('', arg)
-    return args
+    if not config.has_section(section):
+        Debugger.debugger_print('There is no section {0} in {1}'.format(section, configFile))
+        return
+    values = [SafeGetOption(config, section, arg)]
+    for name in args:
+        values.append(SafeGetOption(config, section, name))
+    return values
 
-def SaveArguments(section: str, **kwargs):
+def SaveArguments(section: str, namesValues: dict):
     config = ConfigParser()
     config.read(configFile)
-    for key, value in kwargs.items():
+    if not config.has_section(section):
+        SafeAddSection(config, section)
+
+    for key, value in namesValues.items():
         config.set(section, key, value)
     with open(configFile, 'w') as f:
         config.write(f)

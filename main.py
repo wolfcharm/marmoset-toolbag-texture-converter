@@ -1,7 +1,7 @@
 import sys
 import os
 from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QPixmap, QBitmap, QColor, QWindow
+from PyQt6.QtGui import QPixmap, QBitmap, QColor, QWindow, QIcon
 from PyQt6.QtCore import pyqtSlot, Qt, QEvent, QRect, QCoreApplication, QSize
 
 import qdarktheme
@@ -335,6 +335,7 @@ class MainUI(QMainWindow):
 if __name__ == '__main__':
     qdarktheme.enable_hi_dpi()
     app = QApplication(sys.argv)
+    app.setWindowIcon(QIcon('icon.png'))
     qdarktheme.setup_theme("auto")
     StoredSettings.Init()
     ui = MainUI()

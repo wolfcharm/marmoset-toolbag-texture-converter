@@ -185,8 +185,8 @@ class TextureCardGrayscale(QHBoxLayout):
     def __init__(self, title: str, previewsizex: int, previewsizey: int, displayGrayscale: bool, parent):
         super().__init__(parent)
         self.textureCardHLayout = QHBoxLayout(parent)
-        self.dropAreaAlbedo = DropArea(title, previewsizex, previewsizey, parent)
-        self.textureCardHLayout.addWidget(self.dropAreaAlbedo)
+        self.dropArea = DropArea(title, previewsizex, previewsizey, parent)
+        self.textureCardHLayout.addWidget(self.dropArea)
         self.textureChannelsVLayout = ImageChannelsGrayscale(displayGrayscale, parent)
 
         self.textureCardHLayout.addLayout(self.textureChannelsVLayout)
@@ -305,18 +305,29 @@ class MainUI(QMainWindow):
         Debugger.debugger_print(dropArea.text())
         pass
 
+    @pyqtSlot()
     def showOpenErrorDialog(self):
         popup = QMessageBox(self)
         popup.setWindowTitle('Error!')
-        popup.setIcon(QMessageBox.Critical)
+        popup.setIcon(QMessageBox.Icon.Critical)
         popup.setFixedSize(600, 200)
         popup.setText("Selected .exe is not Toolbag application! Set proper .exe in Settings")
-        popup.setStandardButtons(QMessageBox.Ok)
-        popup.exec_()
+        popup.setStandardButtons(QMessageBox.StandardButton.Ok)
+        popup.exec()
+
+    def texturesSetErrorDialog(self):
+        popup = QMessageBox(self)
+        popup.setWindowTitle('Error!')
+        popup.setIcon(QMessageBox.Icon.Critical)
+        popup.setFixedSize(600, 200)
+        popup.setText("Some texture slots are empty! Please fill it.")
+        popup.setStandardButtons(QMessageBox.StandardButton.Ok)
+        popup.exec()
 
     @pyqtSlot(name='runprocess')
     def runProcess(self):
-        Opener.open_(Settings.marmosetPath, Settings.pyfile, self)
+        Opener.Open(Settings.marmosetPath, Settings.pyfile, self.textureCardAlb.dropArea.filePath,
+                    self.textureCardMet.dropArea.filePath, self.textureCardRough.dropArea.filePath, self)
 
     def selectSavePath(self):
         savePath_ = str(QFileDialog.getExistingDirectory(self, "Select Save Directory"))

@@ -20,7 +20,7 @@ def Open(path, pyfile, albedoPath: str, metallicPath: str, metallicChannel: int,
         parent.showOpenErrorDialog()
 
 def PrepareRecipe(albedoPath: str, metallicPath: str, metallicChannel: int, roughnessPath: str, roughChannel: int):
-    file = open(".bakerRecipe", "a+")
+    file = open("data/.bakerRecipe", "a+")
     file.truncate(0)
     file.write(albedoPath+'\n')
     file.write(metallicPath+'\n')

@@ -94,7 +94,7 @@ class DropArea(QLabel):
         self.sizey = sizey
         self.setFixedSize(sizex, sizey)
         self.setStyleSheet(self.styleSheet)
-        self.mask = QBitmap('mask.png')
+        self.mask = QBitmap('data/mask.png')
         self.pix: QPixmap = QPixmap()
         self.pix_light: QPixmap = QPixmap()
         self.setOpenExternalLinks(True)
@@ -357,7 +357,7 @@ class MainUI(QMainWindow):
 if __name__ == '__main__':
     qdarktheme.enable_hi_dpi()
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon('icon.png'))
+    app.setWindowIcon(QIcon('data/icon.png'))
     qdarktheme.setup_theme("auto")
     StoredSettings.Init()
     ui = MainUI()

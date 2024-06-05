@@ -53,17 +53,17 @@ class ImageChannels(QVBoxLayout):
 
         selectionItems = ['R', 'G', 'B', 'A', '1', '0', '1-R', '1-G', '1-B', '1-A']
         if enableR:
-            R = ImageChannel('R', selectionItems, parent)
-            self.addLayout(R)
+            self.R = ImageChannel('R', selectionItems, parent)
+            self.addLayout(self.R)
         if enableG:
-            G = ImageChannel('G', selectionItems, parent)
-            self.addLayout(G)
+            self.G = ImageChannel('G', selectionItems, parent)
+            self.addLayout(self.G)
         if enableB:
-            B = ImageChannel('B', selectionItems, parent)
-            self.addLayout(B)
+            self.B = ImageChannel('B', selectionItems, parent)
+            self.addLayout(self.B)
         if enableA:
-            A = ImageChannel('A', selectionItems, parent)
-            self.addLayout(A)
+            self.A = ImageChannel('A', selectionItems, parent)
+            self.addLayout(self.A)
 
         self.addSpacerItem(QSpacerItem(1,1, QSizePolicy.Policy.Expanding))
 
@@ -73,8 +73,8 @@ class ImageChannelsGrayscale(QVBoxLayout):
 
         selectionItems = ['R', 'G', 'B', 'A', '1', '0', '1-R', '1-G', '1-B', '1-A']
         if enableGrayscale:
-            Gr = ImageChannel('Grayscale', selectionItems, parent)
-            self.addLayout(Gr)
+            self.Grayscale = ImageChannel('Grayscale', selectionItems, parent)
+            self.addLayout(self.Grayscale)
             self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
 class DropArea(QLabel):
@@ -174,11 +174,17 @@ class TextureCard(QHBoxLayout):
         textureCardHLayout = QHBoxLayout(parent)
         self.dropArea = DropArea(title, previewsizex, previewsizey, parent)
         textureCardHLayout.addWidget(self.dropArea)
-        textureChannelsVLayout = ImageChannels(displaychannelR, displaychannelG, displaychannelB, displaychannelA, parent)
+        self.textureChannelsVLayout = ImageChannels(displaychannelR, displaychannelG, displaychannelB, displaychannelA, parent)
 
-        textureCardHLayout.addLayout(textureChannelsVLayout)
+        textureCardHLayout.addLayout(self.textureChannelsVLayout)
         self.addLayout(textureCardHLayout)
         self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
+
+    def get_active_channels(self):
+        return [self.textureChannelsVLayout.R.selection.currentIndex(),
+                self.textureChannelsVLayout.G.selection.currentIndex(),
+                self.textureChannelsVLayout.B.selection.currentIndex(),
+                self.textureChannelsVLayout.A.selection.currentIndex()]
 
 class TextureCardGrayscale(QHBoxLayout):
 
@@ -192,6 +198,9 @@ class TextureCardGrayscale(QHBoxLayout):
         self.textureCardHLayout.addLayout(self.textureChannelsVLayout)
         self.addLayout(self.textureCardHLayout)
         self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
+
+    def get_active_channel(self):
+        return self.textureChannelsVLayout.Grayscale.selection.currentIndex()
 
 class SettingsWindow(QWidget):
     def __init__(self):
@@ -327,7 +336,8 @@ class MainUI(QMainWindow):
     @pyqtSlot(name='runprocess')
     def runProcess(self):
         Opener.Open(Settings.marmosetPath, Settings.pyfile, self.textureCardAlb.dropArea.filePath,
-                    self.textureCardMet.dropArea.filePath, self.textureCardRough.dropArea.filePath, self)
+                    self.textureCardMet.dropArea.filePath, self.textureCardMet.get_active_channel(),
+                    self.textureCardRough.dropArea.filePath, self.textureCardRough.get_active_channel(), self)
 
     def selectSavePath(self):
         savePath_ = str(QFileDialog.getExistingDirectory(self, "Select Save Directory"))

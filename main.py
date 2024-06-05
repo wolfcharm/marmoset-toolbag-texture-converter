@@ -265,6 +265,8 @@ class MainUI(QMainWindow):
 
         mainWindow = QWidget(self)
         mainVLayout = QVBoxLayout(self)
+        mainHLayout = QHBoxLayout(self)
+        texturesCardsVLayout = QVBoxLayout(self)
 
         menuBar = QMenuBar(self)
         self.fileMenu = menuBar.addMenu("File")
@@ -292,16 +294,23 @@ class MainUI(QMainWindow):
         self.fileMenu.addSeparator()
         self.fileMenu.addAction("Quit", lambda: QCoreApplication.quit())
 
-        mainVLayout.addLayout(self.textureCardAlb)
-        mainVLayout.addLayout(self.textureCardMet)
-        mainVLayout.addLayout(self.textureCardRough)
-        mainVLayout.addStretch(1)
-        mainVLayout.addLayout(savePathHlayout)
+        texturesCardsVLayout.addLayout(self.textureCardAlb)
+        texturesCardsVLayout.addLayout(self.textureCardMet)
+        texturesCardsVLayout.addLayout(self.textureCardRough)
+        texturesCardsVLayout.addStretch(1)
+
+        separator = QFrame(self)
+        separator.setGeometry(QRect(0, 0, 100, 1))
+        separator.setFrameShape(QFrame.Shape.HLine)
+
         buttonRun = QPushButton('Run', self)
         buttonRun.setCursor(Qt.CursorShape.PointingHandCursor)
         buttonRun.clicked.connect(self.runProcess)
+        mainHLayout.addLayout(texturesCardsVLayout)
+        mainVLayout.addLayout(mainHLayout)
+        mainVLayout.addWidget(separator)
+        mainVLayout.addLayout(savePathHlayout)
         mainVLayout.addWidget(buttonRun)
-
         mainWindow.setLayout(mainVLayout)
         self.setCentralWidget(mainWindow)
         self.setGeometry(300, 300, 400, 0)

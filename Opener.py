@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import QWidget
 import Debugger
 
 bakerRecipe = ''
+bakerMesh = 'data/Quad.obj'
 
 def Open(path, pyfile, albedoPath: str, metallicPath: str, metallicChannel: int, roughnessPath: str, roughChannel: int, parent: QWidget):
     if exists(path) & exists(pyfile) & ('toolbag' in path):
@@ -22,17 +23,21 @@ def Open(path, pyfile, albedoPath: str, metallicPath: str, metallicChannel: int,
 def PrepareRecipe(albedoPath: str, metallicPath: str, metallicChannel: int, roughnessPath: str, roughChannel: int):
     file = open("data/.bakerRecipe", "a+")
     file.truncate(0)
-    file.write(albedoPath+'\n')
-    file.write(metallicPath+'\n')
+    file.write(GetAbsolutePath(albedoPath)+'\n')
+    file.write(GetAbsolutePath(metallicPath)+'\n')
     file.write(str(metallicChannel)+'\n')
-    file.write(roughnessPath+'\n')
+    file.write(GetAbsolutePath(roughnessPath)+'\n')
     file.write(str(roughChannel)+'\n')
+    file.write(GetAbsolutePath(bakerMesh))
     file.close()
     global bakerRecipe
     bakerRecipe = os.path.abspath('data/.bakerRecipe')
 
 def RemoveRecipe():
     os.remove(bakerRecipe)
+
+def GetAbsolutePath(path):
+    return os.path.abspath(path)
 
 if __name__ == '__main__':
 

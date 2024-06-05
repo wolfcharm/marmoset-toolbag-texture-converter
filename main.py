@@ -1,7 +1,7 @@
 import sys
 import os
 from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QPixmap, QBitmap, QColor, QWindow, QIcon
+from PyQt6.QtGui import QPixmap, QBitmap, QColor, QWindow, QIcon, QFont
 from PyQt6.QtCore import pyqtSlot, Qt, QEvent, QRect, QCoreApplication, QSize
 
 import qdarktheme
@@ -33,6 +33,24 @@ def CheckMissingSettings():
         else:
             Settings.marmosetPath = path
             StoredSettings.Save()
+
+class ComboBoxSettings(QHBoxLayout):
+    def __init__(self, labelText: str, comboOptions: list, parent, defaultOption: str = ''):
+        super().__init__(parent)
+
+        self.label = QLabel(labelText, parent)
+        self.dropdown = QComboBox(parent)
+        self.dropdown.addItems(comboOptions)
+        if defaultOption != '':
+            self.dropdown.setCurrentText(defaultOption)
+        self.addWidget(self.label)
+        self.addWidget(self.dropdown)
+
+    def get_selected_option_int(self) -> int:
+        return self.dropdown.currentIndex()
+
+    def get_selected_option_str(self) -> str:
+        return self.dropdown.currentText()
 
 class ImageChannel(QHBoxLayout):
     def __init__(self, labelName: str, selectionItems: list, parent):
@@ -263,6 +281,7 @@ class MainUI(QMainWindow):
     def __init__(self):
         super(MainUI, self).__init__()
 
+        headerFont = QFont('Segoe UI', 12)
         mainWindow = QWidget(self)
         mainVLayout = QVBoxLayout(self)
         mainHLayout = QHBoxLayout(self)
@@ -273,6 +292,18 @@ class MainUI(QMainWindow):
         self.editMenu = menuBar.addMenu("Edit")
         self.editMenu.addAction("Preferences...", self.openSettings)
         self.setMenuBar(menuBar)
+
+        bakeSettingsLayout = QVBoxLayout(self)
+        settingsLabel = QLabel('Bake Settings', self)
+        #print(str(settingsLabel.fontInfo().family()))
+        settingsLabel.setFont(headerFont)
+        settingsLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
+        bakeSettingsLayout.addWidget(settingsLabel)
+        self.bakerResolutionSetting = ComboBoxSettings('Resolution',
+                                                       ['64', '128', '256', '512', '1024', '2048', '4096', '8192'], self, '2048')
+        self.bakerResolutionSetting.setAlignment(Qt.AlignmentFlag.AlignTop)
+        bakeSettingsLayout.addLayout(self.bakerResolutionSetting)
+        bakeSettingsLayout.addStretch()
 
         savePathHlayout = QHBoxLayout(self)
         savePathLabel = QLabel("Save Location", self)
@@ -287,6 +318,10 @@ class MainUI(QMainWindow):
         savePathHlayout.addWidget(self.pathField)
         savePathHlayout.addWidget(btn_browseSavePath)
 
+        textureCardsLabel = QLabel('TextureCards', self)
+        textureCardsLabel.setFont(headerFont)
+        textureCardsLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         self.textureCardAlb = TextureCard('Albedo', 150, 150, False, False, False, False, self)
         self.textureCardMet = TextureCardGrayscale('Metal', 150, 150, True, self)
         self.textureCardRough = TextureCardGrayscale('Roughness', 150, 150, True, self)
@@ -294,21 +329,30 @@ class MainUI(QMainWindow):
         self.fileMenu.addSeparator()
         self.fileMenu.addAction("Quit", lambda: QCoreApplication.quit())
 
+        texturesCardsVLayout.addWidget(textureCardsLabel)
         texturesCardsVLayout.addLayout(self.textureCardAlb)
         texturesCardsVLayout.addLayout(self.textureCardMet)
         texturesCardsVLayout.addLayout(self.textureCardRough)
         texturesCardsVLayout.addStretch(1)
 
-        separator = QFrame(self)
-        separator.setGeometry(QRect(0, 0, 100, 1))
-        separator.setFrameShape(QFrame.Shape.HLine)
+        hSeparator = QFrame(self)
+        hSeparator.setGeometry(QRect(0, 0, 100, 1))
+        hSeparator.setFrameShape(QFrame.Shape.HLine)
+
+        vSeparator = QFrame(self)
+        vSeparator.setGeometry(QRect(0, 0, 1, 100))
+        vSeparator.setFrameShape(QFrame.Shape.VLine)
 
         buttonRun = QPushButton('Run', self)
         buttonRun.setCursor(Qt.CursorShape.PointingHandCursor)
         buttonRun.clicked.connect(self.runProcess)
+
         mainHLayout.addLayout(texturesCardsVLayout)
+        mainHLayout.addWidget(vSeparator)
+        mainHLayout.addLayout(bakeSettingsLayout)
+        mainHLayout.addStretch()
         mainVLayout.addLayout(mainHLayout)
-        mainVLayout.addWidget(separator)
+        mainVLayout.addWidget(hSeparator)
         mainVLayout.addLayout(savePathHlayout)
         mainVLayout.addWidget(buttonRun)
         mainWindow.setLayout(mainVLayout)

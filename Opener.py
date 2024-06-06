@@ -128,10 +128,7 @@ def PrepareRecipe(*args: str):
     recipeFile.truncate(0)
 
     for arg in args:
-        if '.' in arg:  # weak check
-            recipeFile.write(GetAbsolutePath(arg)+'\n')
-        else:
-            recipeFile.write(arg + '\n')
+        recipeFile.write(GetAbsolutePath(arg)+'\n')
 
     recipeFile.close()
     global bakerRecipe
@@ -141,6 +138,9 @@ def RemoveRecipe():
     os.remove(bakerRecipe)
 
 def GetAbsolutePath(path):
+    if path[0] == '.' or '.' not in path or not os.path.isfile(path):
+        return path
+
     return os.path.abspath(path)
 
 if __name__ == '__main__':

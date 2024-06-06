@@ -68,13 +68,13 @@ modelHi.name = 'Quad_hi'
 
 modelLow = modelHi.duplicate('Quad_low')
 
-baker.outputSamples = 64
+baker.outputSamples = int(recipe.samples)
 baker.outputPath = recipe.outputPath
-baker.outputWidth = 2048
-baker.outputHeight = 2048
+baker.outputWidth = int(recipe.resolution)
+baker.outputHeight = int(recipe.resolution)
 baker.addGroup('Bake Group')
 baker.getMap("Normals").enabled = False
-baker.getMap("Albedo (Metal)").enabled = True
+baker.getMap("Albedo").enabled = True
 baker.getMap("Specular").enabled = True
 baker.getMap("Gloss").enabled = True
 
@@ -84,8 +84,11 @@ modelHi.parent = bakerHigh
 modelLow.parent = bakerLow
 hiMat.assign(modelHi, True)
 
-print(recipe.albedoTexturePath, recipe.metallicTexturePath, recipe.metallicChannel, recipe.roughnessTexturePath,
-      recipe.roughnessChannel, recipe.bakerMesh)
+mset.bakeAll()
+mset.quit()
+
+#print(recipe.albedoTexturePath, recipe.metallicTexturePath, recipe.metallicChannel, recipe.roughnessTexturePath,
+#      recipe.roughnessChannel, recipe.bakerMesh)
 #print([my_object.name for my_object in bakerGroup[0].getChildren()])
 #print(modelHi.findInChildren('default').material)
 

@@ -428,7 +428,7 @@ class MainUI(QMainWindow):
         runParams.roughnessTexturePath = self.textureCardRough.dropArea.filePath
         runParams.metallicChannel = self.textureCardMet.get_active_channel()
         runParams.roughnessChannel = self.textureCardRough.get_active_channel()
-        runParams.saveName = self.saveNameField.text()
+        runParams.saveName = self.saveNameField.text() + self.saveExtensionDropdown.currentText()
         runParams.savePath = self.savePathField.text()
         runParams.bakeSamples = self.bakerSamplesSetting.get_selected_option_str()
         runParams.bakeResolution = self.bakerResolutionSetting.get_selected_option_str()

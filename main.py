@@ -14,6 +14,8 @@ import Debugger
 Debugger.enabled = True
 
 allowedImageFormats = ['.jpg', '.png', '.tga', '.psd', '.psb', '.exr', '.hdr', '.mpic', '.bmp', '.dds', '.tig', '.pfm']
+saveFormats = ['.psd', '.tga', '.png', '.jpg', 'jpeg']
+bakeResolutions = ['64', '128', '256', '512', '1024', '2048', '4096', '8192']
 savePath = ''
 
 def CheckMissingSettings():
@@ -41,6 +43,7 @@ class ComboBoxSettings(QHBoxLayout):
         self.label = QLabel(labelText, parent)
         self.dropdown = QComboBox(parent)
         self.dropdown.addItems(comboOptions)
+        self.dropdown.setCursor(Qt.CursorShape.PointingHandCursor)
         if defaultOption != '':
             self.dropdown.setCurrentText(defaultOption)
         self.addWidget(self.label)
@@ -299,8 +302,7 @@ class MainUI(QMainWindow):
         settingsLabel.setFont(headerFont)
         settingsLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
         bakeSettingsLayout.addWidget(settingsLabel)
-        self.bakerResolutionSetting = ComboBoxSettings('Resolution',
-                                                       ['64', '128', '256', '512', '1024', '2048', '4096', '8192'], self, '2048')
+        self.bakerResolutionSetting = ComboBoxSettings('Resolution', bakeResolutions, self, '2048')
         self.bakerResolutionSetting.setAlignment(Qt.AlignmentFlag.AlignTop)
         bakeSettingsLayout.addLayout(self.bakerResolutionSetting)
         bakeSettingsLayout.addStretch()
@@ -334,14 +336,17 @@ class MainUI(QMainWindow):
 
         # Save Name
         saveNameHlayout = QHBoxLayout(self)
-        saveNameLabel = QLabel("Save Location", self)
+        saveNameLabel = QLabel("Save Name", self)
         self.saveNameField = QLineEdit(self)
         self.saveNameField.resize(350, 20)
         self.saveNameField.setText(savePath)
         self.saveNameField.textChanged.connect(self.updateSavePath)
-
+        self.saveExtensionDropdown = QComboBox(self)
+        self.saveExtensionDropdown.addItems(saveFormats)
+        self.saveExtensionDropdown.setCursor(Qt.CursorShape.PointingHandCursor)
         saveNameHlayout.addWidget(saveNameLabel)
         saveNameHlayout.addWidget(self.saveNameField)
+        saveNameHlayout.addWidget(self.saveExtensionDropdown)
 
         # Save Path
         savePathHlayout = QHBoxLayout(self)
@@ -359,6 +364,8 @@ class MainUI(QMainWindow):
 
         # Run Button
         buttonRun = QPushButton('Run', self)
+        buttonRun.setFixedHeight(32)
+        buttonRun.setObjectName('run_btn')
         buttonRun.setCursor(Qt.CursorShape.PointingHandCursor)
         buttonRun.clicked.connect(self.runProcess)
 
@@ -429,6 +436,20 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon('data/icon.png'))
     qdarktheme.setup_theme("auto")
+    qss = """
+    QPushButton#run_btn {
+        background-color: #008800;
+        border-color: #009900;
+        border-width: 3px;
+        color: #004400;
+        font-size: 11pt;
+        font-weight: bold;
+    }
+    QPushButton#run_btn:hover {
+        background-color: #009900;
+    }
+    """
+    qdarktheme.setup_theme(additional_qss=qss)
     StoredSettings.Init()
     ui = MainUI()
     CheckMissingSettings()

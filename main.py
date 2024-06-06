@@ -16,7 +16,6 @@ Debugger.enabled = True
 allowedImageFormats = ['.jpg', '.png', '.tga', '.psd', '.psb', '.exr', '.hdr', '.mpic', '.bmp', '.dds', '.tig', '.pfm']
 saveFormats = ['.psd', '.tga', '.png', '.jpg', 'jpeg']
 bakeResolutions = ['64', '128', '256', '512', '1024', '2048', '4096', '8192']
-savePath = ''
 
 def CheckMissingSettings():
 
@@ -41,6 +40,7 @@ class ComboBoxSettings(QHBoxLayout):
         super().__init__(parent)
 
         self.label = QLabel(labelText, parent)
+        self.label.setMinimumSize(120, 8)
         self.dropdown = QComboBox(parent)
         self.dropdown.addItems(comboOptions)
         self.dropdown.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -339,8 +339,7 @@ class MainUI(QMainWindow):
         saveNameLabel = QLabel("Save Name", self)
         self.saveNameField = QLineEdit(self)
         self.saveNameField.resize(350, 20)
-        self.saveNameField.setText(savePath)
-        self.saveNameField.textChanged.connect(self.updateSavePath)
+        #self.saveNameField.textChanged.connect(self.updateSavePath)
         self.saveExtensionDropdown = QComboBox(self)
         self.saveExtensionDropdown.addItems(saveFormats)
         self.saveExtensionDropdown.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -352,9 +351,8 @@ class MainUI(QMainWindow):
         savePathHlayout = QHBoxLayout(self)
         savePathLabel = QLabel("Save Location", self)
         self.pathField = QLineEdit(self)
-        self.pathField.resize(350, 20)
-        self.pathField.setText(savePath)
-        self.pathField.textChanged.connect(self.updateSavePath)
+        self.pathField.setEnabled(False)
+        #self.pathField.textChanged.connect(self.updateSavePath)
         btn_browseSavePath = QPushButton('Browse...', self)
         btn_browseSavePath.clicked.connect(self.selectSavePath)
         btn_browseSavePath.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -387,10 +385,6 @@ class MainUI(QMainWindow):
 
         self.settings = SettingsWindow()
 
-    def openAlbDrop(self, dropArea: QLabel):
-        Debugger.debugger_print(dropArea.text())
-        pass
-
     @pyqtSlot()
     def showOpenErrorDialog(self):
         popup = QMessageBox(self)
@@ -419,12 +413,7 @@ class MainUI(QMainWindow):
     def selectSavePath(self):
         savePath_ = str(QFileDialog.getExistingDirectory(self, "Select Save Directory"))
         if savePath_:
-            self.pathField.setText(savePath_)
-            return savePath_
-    def updateSavePath(self):
-            global savePath
-            path = self.pathField.text()
-            Debugger.debugger_print(path)
+            self.pathField.setText(f'{savePath_}/')
 
     def openSettings(self):
         self.settings.show()
@@ -438,15 +427,15 @@ if __name__ == '__main__':
     qdarktheme.setup_theme("auto")
     qss = """
     QPushButton#run_btn {
-        background-color: #008800;
-        border-color: #009900;
+        background-color: #007700;
+        border-color: #008800;
         border-width: 3px;
-        color: #004400;
+        color: #003300;
         font-size: 11pt;
         font-weight: bold;
     }
     QPushButton#run_btn:hover {
-        background-color: #009900;
+        background-color: #008800;
     }
     """
     qdarktheme.setup_theme(additional_qss=qss)

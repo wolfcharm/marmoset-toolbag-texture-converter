@@ -431,7 +431,7 @@ class MainUI(QMainWindow):
         runParams.saveName = self.saveNameField.text()
         runParams.savePath = self.savePathField.text()
         runParams.bakeSamples = self.bakerSamplesSetting.get_selected_option_str()
-        runParams.resolution = self.bakerResolutionSetting.get_selected_option_str()
+        runParams.bakeResolution = self.bakerResolutionSetting.get_selected_option_str()
         Opener.Open(runParams, self)
 
     def selectSavePath(self):

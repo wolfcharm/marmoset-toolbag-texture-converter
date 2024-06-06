@@ -17,8 +17,9 @@ class RunParameters(object):
         self._roughnessChannel: str = ''
         self._saveName: str = ''
         self._savePath: str = ''
-        self._bakeResolution: str = ''
         self._bakeSamples: str = ''
+        self._bakeResolution: str = ''
+
     @property
     def albedoTexturePath(self):
         return str(self._albedoTexturePath)
@@ -99,7 +100,6 @@ class RunParameters(object):
         return True, None
 
 
-
 def Open(parameters: RunParameters, parent: QWidget):
     marmosetPath = StoredSettings.Settings.marmosetPath
     if exists(marmosetPath) & exists(StaticVariables.pyfile) & ('toolbag' in marmosetPath):
@@ -115,7 +115,7 @@ def Open(parameters: RunParameters, parent: QWidget):
             return
 
         PrepareRecipe(parameters.albedoTexturePath, parameters.metallicTexturePath, parameters.metallicChannel,
-                      parameters.roughnessTexturePath, parameters.roughnessChannel, parameters.savePath,
+                      parameters.roughnessTexturePath, parameters.roughnessChannel, parameters.savePath, parameters.saveName,
                       parameters.bakeSamples, parameters.bakeResolution, StaticVariables.bakerMesh)
 
         subprocess.run([marmosetPath, StaticVariables.pyfile, bakerRecipe])

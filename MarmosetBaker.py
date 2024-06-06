@@ -7,13 +7,26 @@ class Recipe(object):
     def __init__(self):
         self.albedoTexturePath = ''
         self.metallicTexturePath = ''
-        self.metallicChannel = 0
+        self.metallicChannel = ''
         self.roughnessTexturePath = ''
-        self.roughnessChannel = 0
+        self.roughnessChannel = ''
         self.outputPath = f' .png'
+        self.samples = ''
+        self.resolution = ''
         self.bakerMesh = ''
         self.get_baker_recipe()
 
+    # order
+    # parameters.albedoTexturePath
+    # parameters.metallicTexturePath
+    # parameters.metallicChannel
+    # parameters.roughnessTexturePath
+    # parameters.roughnessChannel
+    # parameters.savePath
+    # parameters.saveName
+    # parameters.bakeSamples
+    # parameters.bakeResolution
+    # StaticVariables.bakerMesh
     def get_baker_recipe(self):
         file = open(sys.argv[1], 'r')
         self.albedoTexturePath = file.readline().rstrip('\n')
@@ -21,7 +34,11 @@ class Recipe(object):
         self.metallicChannel = file.readline().rstrip('\n')
         self.roughnessTexturePath = file.readline().rstrip('\n')
         self.roughnessChannel = file.readline().rstrip('\n')
-        self.outputPath = f' .png'
+        self.outputPath = file.readline().rstrip('\n')
+        saveName = file.readline().rstrip('\n')
+        self.outputPath = f'{self.outputPath}{saveName}'
+        self.samples = file.readline().rstrip('\n')
+        self.resolution = file.readline().rstrip('\n')
         self.bakerMesh = file.readline().rstrip('\n')
         file.close()
 

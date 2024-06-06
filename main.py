@@ -4,18 +4,16 @@ from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QPixmap, QBitmap, QColor, QWindow, QIcon, QFont
 from PyQt6.QtCore import pyqtSlot, Qt, QEvent, QRect, QCoreApplication, QSize
 
+import StaticVariables
 import qdarktheme
 import Opener
+from Opener import RunParameters
 import StoredSettings
 from StoredSettings import Settings
 from os.path import exists
 import Debugger
 
 Debugger.enabled = True
-
-allowedImageFormats = ['.jpg', '.png', '.tga', '.psd', '.psb', '.exr', '.hdr', '.mpic', '.bmp', '.dds', '.tig', '.pfm']
-saveFormats = ['.psd', '.tga', '.png', '.jpg', 'jpeg']
-bakeResolutions = ['64', '128', '256', '512', '1024', '2048', '4096', '8192']
 
 def CheckMissingSettings():
 
@@ -133,7 +131,7 @@ class DropArea(QLabel):
         self.setPixmap(QPixmap(file))
 
     def openFileSelectDialog(self):
-        filter_ = "Images (*{0})".format(' *'.join(allowedImageFormats))
+        filter_ = "Images (*{0})".format(' *'.join(StaticVariables.allowedImageFormats))
         fileName, _ = QFileDialog.getOpenFileName(self, "Select Image", '',
                                                   filter_)
         if fileName:
@@ -172,7 +170,7 @@ class DropArea(QLabel):
             if len(urls) > 1:
                 e.ignore()
                 return
-            if any(ext in urls[0].toLocalFile() for ext in allowedImageFormats):
+            if any(ext in urls[0].toLocalFile() for ext in StaticVariables.allowedImageFormats):
                 e.accept()
 
         else:
@@ -302,7 +300,7 @@ class MainUI(QMainWindow):
         settingsLabel.setFont(headerFont)
         settingsLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
         bakeSettingsLayout.addWidget(settingsLabel)
-        self.bakerResolutionSetting = ComboBoxSettings('Resolution', bakeResolutions, self, '2048')
+        self.bakerResolutionSetting = ComboBoxSettings('Resolution', StaticVariables.bakeResolutions, self, '2048')
         self.bakerResolutionSetting.setAlignment(Qt.AlignmentFlag.AlignTop)
         bakeSettingsLayout.addLayout(self.bakerResolutionSetting)
         bakeSettingsLayout.addStretch()
@@ -341,7 +339,7 @@ class MainUI(QMainWindow):
         self.saveNameField.resize(350, 20)
         #self.saveNameField.textChanged.connect(self.updateSavePath)
         self.saveExtensionDropdown = QComboBox(self)
-        self.saveExtensionDropdown.addItems(saveFormats)
+        self.saveExtensionDropdown.addItems(StaticVariables.saveFormats)
         self.saveExtensionDropdown.setCursor(Qt.CursorShape.PointingHandCursor)
         saveNameHlayout.addWidget(saveNameLabel)
         saveNameHlayout.addWidget(self.saveNameField)
@@ -395,6 +393,7 @@ class MainUI(QMainWindow):
         popup.setStandardButtons(QMessageBox.StandardButton.Ok)
         popup.exec()
 
+    @pyqtSlot()
     def texturesSetErrorDialog(self):
         popup = QMessageBox(self)
         popup.setWindowTitle('Error!')
@@ -406,9 +405,13 @@ class MainUI(QMainWindow):
 
     @pyqtSlot(name='runprocess')
     def runProcess(self):
-        Opener.Open(Settings.marmosetPath, Settings.pyfile, self.textureCardAlb.dropArea.filePath,
-                    self.textureCardMet.dropArea.filePath, self.textureCardMet.get_active_channel(),
-                    self.textureCardRough.dropArea.filePath, self.textureCardRough.get_active_channel(), self)
+        runParams = RunParameters
+        runParams.albedoTexturePath = self.textureCardAlb.dropArea.filePath
+        runParams.metallicTexturePath = self.textureCardMet.dropArea.filePath
+        runParams.roughnessTexturePath = self.textureCardRough.dropArea.filePath
+        runParams.metallicChannel = self.textureCardMet.get_active_channel()
+        runParams.roughnessChannel = self.textureCardRough.get_active_channel()
+        Opener.Open(runParams, self)
 
     def selectSavePath(self):
         savePath_ = str(QFileDialog.getExistingDirectory(self, "Select Save Directory"))

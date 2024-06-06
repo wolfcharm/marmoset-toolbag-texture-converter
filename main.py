@@ -301,7 +301,9 @@ class MainUI(QMainWindow):
         settingsLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
         bakeSettingsLayout.addWidget(settingsLabel)
         self.bakerResolutionSetting = ComboBoxSettings('Resolution', StaticVariables.bakeResolutions, self, '2048')
-        self.bakerResolutionSetting.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.bakerSamplesSetting = ComboBoxSettings('Samples', StaticVariables.bakeSamples, self, '16')
+
+        bakeSettingsLayout.addLayout(self.bakerSamplesSetting)
         bakeSettingsLayout.addLayout(self.bakerResolutionSetting)
         bakeSettingsLayout.addStretch()
 
@@ -348,14 +350,14 @@ class MainUI(QMainWindow):
         # Save Path
         savePathHlayout = QHBoxLayout(self)
         savePathLabel = QLabel("Save Location", self)
-        self.pathField = QLineEdit(self)
-        self.pathField.setEnabled(False)
+        self.savePathField = QLineEdit(self)
+        self.savePathField.setEnabled(False)
         #self.pathField.textChanged.connect(self.updateSavePath)
         btn_browseSavePath = QPushButton('Browse...', self)
         btn_browseSavePath.clicked.connect(self.selectSavePath)
         btn_browseSavePath.setCursor(Qt.CursorShape.PointingHandCursor)
         savePathHlayout.addWidget(savePathLabel)
-        savePathHlayout.addWidget(self.pathField)
+        savePathHlayout.addWidget(self.savePathField)
         savePathHlayout.addWidget(btn_browseSavePath)
 
         # Run Button
@@ -399,24 +401,43 @@ class MainUI(QMainWindow):
         popup.setWindowTitle('Error!')
         popup.setIcon(QMessageBox.Icon.Critical)
         popup.setFixedSize(600, 200)
-        popup.setText("Some texture slots are empty! Please fill it.")
+        popup.setText("Some texture slots are empty! Please fill them out.")
         popup.setStandardButtons(QMessageBox.StandardButton.Ok)
         popup.exec()
 
+    @pyqtSlot()
+    def saveParametersErrorDialog(self, paramName: str):
+        popup = QMessageBox(self)
+        popup.setWindowTitle('Error!')
+        popup.setIcon(QMessageBox.Icon.Critical)
+        popup.setFixedSize(600, 200)
+        popup.setText(f"Some parameters are empty! Please fill them out:\n{self.nicify_parameter_names(paramName)}")
+        popup.setStandardButtons(QMessageBox.StandardButton.Ok)
+        popup.exec()
+        
+    def nicify_parameter_names(self, rawParameterName: str):
+        for key, value in StaticVariables.fancyParametersNames.items():
+            if key == rawParameterName:
+                return value
+
     @pyqtSlot(name='runprocess')
     def runProcess(self):
-        runParams = RunParameters
+        runParams = RunParameters()
         runParams.albedoTexturePath = self.textureCardAlb.dropArea.filePath
         runParams.metallicTexturePath = self.textureCardMet.dropArea.filePath
         runParams.roughnessTexturePath = self.textureCardRough.dropArea.filePath
         runParams.metallicChannel = self.textureCardMet.get_active_channel()
         runParams.roughnessChannel = self.textureCardRough.get_active_channel()
+        runParams.saveName = self.saveNameField.text()
+        runParams.savePath = self.savePathField.text()
+        runParams.bakeSamples = self.bakerSamplesSetting.get_selected_option_str()
+        runParams.resolution = self.bakerResolutionSetting.get_selected_option_str()
         Opener.Open(runParams, self)
 
     def selectSavePath(self):
         savePath_ = str(QFileDialog.getExistingDirectory(self, "Select Save Directory"))
         if savePath_:
-            self.pathField.setText(f'{savePath_}/')
+            self.savePathField.setText(f'{savePath_}/')
 
     def openSettings(self):
         self.settings.show()
@@ -427,7 +448,7 @@ if __name__ == '__main__':
     qdarktheme.enable_hi_dpi()
     app = QApplication(sys.argv)
     app.setWindowIcon(QIcon('data/icon.png'))
-    qdarktheme.setup_theme("auto")
+    qdarktheme.setup_theme("dark")
     qss = """
     QPushButton#run_btn {
         background-color: #007700;
@@ -440,8 +461,15 @@ if __name__ == '__main__':
     QPushButton#run_btn:hover {
         background-color: #008800;
     }
+    QLineEdit:enabled {
+        background-color:#17171a;
+    }
+    QLineEdit:disabled {
+        background-color: #202124;
+        border-color: #333;
+    }
     """
-    qdarktheme.setup_theme(additional_qss=qss)
+    qdarktheme.setup_theme(additional_qss=qss, custom_colors={"primary": "#009900"})
     StoredSettings.Init()
     ui = MainUI()
     CheckMissingSettings()

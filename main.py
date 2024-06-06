@@ -100,7 +100,7 @@ class DropArea(QLabel):
         super().__init__(parent)
 
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.styleSheet = ("QLabel{border-style:dashed; border-color: rgba(255,255,255,50); border-width: 2px;}"
+        self.styleSheet = ("QLabel{color: #888; border-style:dashed; border-color: rgba(255,255,255,50); border-width: 2px;}"
                            "\nQLabel:hover {border-color: rgba(255,255,255,100)}")
         self.setAcceptDrops(True)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -293,9 +293,9 @@ class MainUI(QMainWindow):
         self.editMenu.addAction("Preferences...", self.openSettings)
         self.setMenuBar(menuBar)
 
+        # Bake Settings
         bakeSettingsLayout = QVBoxLayout(self)
         settingsLabel = QLabel('Bake Settings', self)
-        #print(str(settingsLabel.fontInfo().family()))
         settingsLabel.setFont(headerFont)
         settingsLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
         bakeSettingsLayout.addWidget(settingsLabel)
@@ -305,19 +305,7 @@ class MainUI(QMainWindow):
         bakeSettingsLayout.addLayout(self.bakerResolutionSetting)
         bakeSettingsLayout.addStretch()
 
-        savePathHlayout = QHBoxLayout(self)
-        savePathLabel = QLabel("Save Location", self)
-        self.pathField = QLineEdit(self)
-        self.pathField.resize(350, 20)
-        self.pathField.setText(savePath)
-        self.pathField.textChanged.connect(self.updateSavePath)
-        btn_browseSavePath = QPushButton('Browse...', self)
-        btn_browseSavePath.clicked.connect(self.selectSavePath)
-        btn_browseSavePath.setCursor(Qt.CursorShape.PointingHandCursor)
-        savePathHlayout.addWidget(savePathLabel)
-        savePathHlayout.addWidget(self.pathField)
-        savePathHlayout.addWidget(btn_browseSavePath)
-
+        # Texture Cards
         textureCardsLabel = QLabel('TextureCards', self)
         textureCardsLabel.setFont(headerFont)
         textureCardsLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -335,6 +323,7 @@ class MainUI(QMainWindow):
         texturesCardsVLayout.addLayout(self.textureCardRough)
         texturesCardsVLayout.addStretch(1)
 
+        # Separators
         hSeparator = QFrame(self)
         hSeparator.setGeometry(QRect(0, 0, 100, 1))
         hSeparator.setFrameShape(QFrame.Shape.HLine)
@@ -343,22 +332,50 @@ class MainUI(QMainWindow):
         vSeparator.setGeometry(QRect(0, 0, 1, 100))
         vSeparator.setFrameShape(QFrame.Shape.VLine)
 
+        # Save Name
+        saveNameHlayout = QHBoxLayout(self)
+        saveNameLabel = QLabel("Save Location", self)
+        self.saveNameField = QLineEdit(self)
+        self.saveNameField.resize(350, 20)
+        self.saveNameField.setText(savePath)
+        self.saveNameField.textChanged.connect(self.updateSavePath)
+
+        saveNameHlayout.addWidget(saveNameLabel)
+        saveNameHlayout.addWidget(self.saveNameField)
+
+        # Save Path
+        savePathHlayout = QHBoxLayout(self)
+        savePathLabel = QLabel("Save Location", self)
+        self.pathField = QLineEdit(self)
+        self.pathField.resize(350, 20)
+        self.pathField.setText(savePath)
+        self.pathField.textChanged.connect(self.updateSavePath)
+        btn_browseSavePath = QPushButton('Browse...', self)
+        btn_browseSavePath.clicked.connect(self.selectSavePath)
+        btn_browseSavePath.setCursor(Qt.CursorShape.PointingHandCursor)
+        savePathHlayout.addWidget(savePathLabel)
+        savePathHlayout.addWidget(self.pathField)
+        savePathHlayout.addWidget(btn_browseSavePath)
+
+        # Run Button
         buttonRun = QPushButton('Run', self)
         buttonRun.setCursor(Qt.CursorShape.PointingHandCursor)
         buttonRun.clicked.connect(self.runProcess)
 
+        # Main Layout Compose
         mainHLayout.addLayout(texturesCardsVLayout)
         mainHLayout.addWidget(vSeparator)
         mainHLayout.addLayout(bakeSettingsLayout)
         mainHLayout.addStretch()
         mainVLayout.addLayout(mainHLayout)
         mainVLayout.addWidget(hSeparator)
+        mainVLayout.addLayout(saveNameHlayout)
         mainVLayout.addLayout(savePathHlayout)
         mainVLayout.addWidget(buttonRun)
         mainWindow.setLayout(mainVLayout)
         self.setCentralWidget(mainWindow)
         self.setGeometry(300, 300, 400, 0)
-        self.setWindowTitle('Marmoset texture converter')
+        self.setWindowTitle('Marmoset Texture Converter')
         self.show()
 
         self.settings = SettingsWindow()

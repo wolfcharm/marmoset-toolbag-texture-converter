@@ -12,7 +12,7 @@ class MainUI(QMainWindow):
     def __init__(self):
         super(MainUI, self).__init__()
 
-        headerFont = QFont('Segoe UI', 12)
+        headerFont = QFont('Futura', 12)
         mainWindow = QWidget(self)
         mainVLayout = QVBoxLayout(self)
         mainHLayout = QHBoxLayout(self)

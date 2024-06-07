@@ -1,5 +1,4 @@
-
-from PyQt6.QtGui import QPixmap, QBitmap
+from PyQt6.QtGui import QPixmap, QBitmap, QFont
 from PyQt6.QtCore import Qt, QObject
 
 import StaticVariables
@@ -108,6 +107,7 @@ class ImageChannel(QHBoxLayout):
         super().__init__(parent)
 
         self.label = QLabel(labelName, parent)
+        self.label.setMinimumSize(65,8)
         self.selection = QComboBox(parent)
         self.selection.setCursor(Qt.CursorShape.PointingHandCursor)
 
@@ -134,7 +134,7 @@ class ImageChannels(QVBoxLayout):
             self.A = ImageChannel('A', selectionItems, parent)
             self.addLayout(self.A)
 
-        self.addSpacerItem(QSpacerItem(1,1, QSizePolicy.Policy.Expanding))
+        self.addStretch()
 
 class ImageChannelsGrayscale(QVBoxLayout):
     def __init__(self, enableGrayscale: bool, parent):
@@ -144,7 +144,8 @@ class ImageChannelsGrayscale(QVBoxLayout):
         if enableGrayscale:
             self.Grayscale = ImageChannel('Grayscale', selectionItems, parent)
             self.addLayout(self.Grayscale)
-            self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
+            self.addStretch()
+
 
 class DropArea(QLabel):
     def __init__(self, parent: QObject, title: str, sizex: int, sizey: int):
@@ -241,32 +242,42 @@ class TextureCard(QHBoxLayout):
     def __init__(self, title: str, previewsizex: int, previewsizey: int, displaychannelR: bool, displaychannelG: bool, displaychannelB: bool, displaychannelA: bool, parent):
         super().__init__(parent)
 
-        textureCardHLayout = QHBoxLayout(parent)
         self.dropArea = DropArea(parent, title, previewsizex, previewsizey)
-        textureCardHLayout.addWidget(self.dropArea)
+        self.addWidget(self.dropArea)
+
+        infoArea = QVBoxLayout(parent)
         self.textureChannelsVLayout = ImageChannels(displaychannelR, displaychannelG, displaychannelB, displaychannelA, parent)
 
-        textureCardHLayout.addLayout(self.textureChannelsVLayout)
-        self.addLayout(textureCardHLayout)
-        self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
+        headerFont = QFont('Futura', 10)
+        label = QLabel(title, parent)
+        label.setFont(headerFont)
+        label.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-    def get_active_channels(self):
-        return [self.textureChannelsVLayout.R.selection.currentIndex(),
-                self.textureChannelsVLayout.G.selection.currentIndex(),
-                self.textureChannelsVLayout.B.selection.currentIndex(),
-                self.textureChannelsVLayout.A.selection.currentIndex()]
+        infoArea.addWidget(label)
+        infoArea.addLayout(self.textureChannelsVLayout)
+
+        self.addLayout(infoArea)
+        self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
 class TextureCardGrayscale(QHBoxLayout):
 
     def __init__(self, title: str, previewsizex: int, previewsizey: int, displayGrayscale: bool, parent):
         super().__init__(parent)
-        self.textureCardHLayout = QHBoxLayout(parent)
-        self.dropArea = DropArea(parent, title, previewsizex, previewsizey)
-        self.textureCardHLayout.addWidget(self.dropArea)
-        self.textureChannelsVLayout = ImageChannelsGrayscale(displayGrayscale, parent)
 
-        self.textureCardHLayout.addLayout(self.textureChannelsVLayout)
-        self.addLayout(self.textureCardHLayout)
+        headerFont = QFont('Futura', 10)
+        self.dropArea = DropArea(parent, title, previewsizex, previewsizey)
+        self.addWidget(self.dropArea)
+
+        label = QLabel(title, parent)
+        label.setFont(headerFont)
+        label.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        infoArea = QVBoxLayout(parent)
+        self.textureChannelsVLayout = ImageChannelsGrayscale(displayGrayscale, parent)
+        infoArea.addWidget(label)
+        infoArea.addLayout(self.textureChannelsVLayout)
+
+        self.addLayout(infoArea)
         self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
     def get_active_channel(self):

@@ -28,7 +28,7 @@ if __name__ == '__main__':
     app.setWindowIcon(QIcon('data/icon.png'))
     qdarktheme.setup_theme("dark")
     qss = """
-    QPushButton#run_btn {
+    QPushButton#run_btn, QPushButton#save_btn {
         background-color: #007700;
         border-color: #008800;
         border-width: 3px;
@@ -37,14 +37,10 @@ if __name__ == '__main__':
         font-weight: bold;
     }
     QPushButton#save_btn {
-        background-color: #007700;
-        border-color: #008800;
         border-width: 2px;
-        color: #003300;
         font-size: 10pt;
-        font-weight: bold;
     }
-    QPushButton#run_btn:hover {
+    QPushButton#run_btn:hover, QPushButton#save_btn:hover {
         background-color: #008800;
     }
     QLineEdit:enabled {

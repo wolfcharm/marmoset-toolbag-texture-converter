@@ -4,13 +4,10 @@ import StaticVariables
 
 class Settings:
     marmosetPath = ''
+    marmoset_doBake = '1'
+    marmoset_quitAfterBake = '1'
 
 def Init():
-    config = ConfigParser()
-    config.read(StaticVariables.configFile)
-    SafeAddSection(config, 'Paths')
-    with open(StaticVariables.configFile, 'w') as f:
-        config.write(f)
     Save()
     Load()
 
@@ -18,6 +15,8 @@ def Load():
     config = ConfigParser(allow_no_value=True)
     config.read(StaticVariables.configFile)
     Settings.marmosetPath = SafeGetOption(config, 'Paths', 'marmosetPath')
+    Settings.marmoset_doBake = SafeGetOption(config, 'Marmoset', 'marmoset_doBake')
+    Settings.marmoset_quitAfterBake = SafeGetOption(config, 'Marmoset', 'marmoset_quitAfterBake')
 
 def LoadArguments(section: str, arg: str, *args: str):
     config = ConfigParser(allow_no_value=True)
@@ -45,18 +44,27 @@ def Save():
     config = ConfigParser()
     config.read(StaticVariables.configFile)
     if Settings.marmosetPath != "":
-        config.set('Paths', 'marmosetPath', Settings.marmosetPath)
+        SafeAddOption(config, 'Paths', 'marmosetPath', Settings.marmosetPath)
+    if Settings.marmoset_doBake != "":
+        SafeAddOption(config, 'Marmoset', 'marmoset_doBake', Settings.marmoset_doBake)
+    if Settings.marmoset_quitAfterBake != "":
+        SafeAddOption(config, 'Marmoset', 'marmoset_quitAfterBake', Settings.marmoset_quitAfterBake)
     with open(StaticVariables.configFile, 'w') as f:
         config.write(f)
 
-def SafeAddSection(config, name: str):
+def SafeAddSection(config, name: str):  # return True if section exist or was created successfully
     sections = config.sections()
     if name in sections:
-        return
+        return True
     else:
-        config.add_section('Paths')
+        config.add_section(name)
+        return True
 
-def SafeGetOption(config, section: str, name: str):
+def SafeAddOption(config: ConfigParser, section: str, optionName: str, optionValue: str):
+    if SafeAddSection(config, section):
+        config.set(section, optionName, optionValue)
+
+def SafeGetOption(config: ConfigParser, section: str, name: str):
     if config.has_option(section, name):
         return config.get(section, name)
     else:

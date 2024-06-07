@@ -116,7 +116,7 @@ def Open(parameters: RunParameters, parent: QWidget):
 
         PrepareRecipe(parameters.albedoTexturePath, parameters.metallicTexturePath, parameters.metallicChannel,
                       parameters.roughnessTexturePath, parameters.roughnessChannel, parameters.savePath, parameters.saveName,
-                      parameters.bakeSamples, parameters.bakeResolution, StaticVariables.bakerMesh)
+                      parameters.bakeSamples, parameters.bakeResolution, StaticVariables.bakerMesh, '0', '0')
 
         subprocess.run([marmosetPath, StaticVariables.pyfile, bakerRecipe])
         RemoveRecipe()

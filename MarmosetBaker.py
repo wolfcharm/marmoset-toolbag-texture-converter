@@ -14,19 +14,23 @@ class Recipe(object):
         self.samples = ''
         self.resolution = ''
         self.bakerMesh = ''
+        self.doBake = 'True'
+        self.quitAfterBake = 'True'
         self.get_baker_recipe()
 
-    # order
-    # parameters.albedoTexturePath
-    # parameters.metallicTexturePath
-    # parameters.metallicChannel
-    # parameters.roughnessTexturePath
-    # parameters.roughnessChannel
-    # parameters.savePath
-    # parameters.saveName
-    # parameters.bakeSamples
-    # parameters.bakeResolution
-    # StaticVariables.bakerMesh
+    # order:
+    # albedoTexturePath
+    # metallicTexturePath
+    # metallicChannel
+    # roughnessTexturePath
+    # roughnessChannel
+    # savePath
+    # saveName
+    # bakeSamples
+    # bakeResolution
+    # bakerMesh
+    # doBake
+    # quitAfterBake
     def get_baker_recipe(self):
         file = open(sys.argv[1], 'r')
         self.albedoTexturePath = file.readline().rstrip('\n')
@@ -40,15 +44,17 @@ class Recipe(object):
         self.samples = file.readline().rstrip('\n')
         self.resolution = file.readline().rstrip('\n')
         self.bakerMesh = file.readline().rstrip('\n')
+        self.doBake = file.readline().rstrip('\n')
+        self.quitAfterBake = file.readline().rstrip('\n')
         file.close()
 
 def interpret_channels(index: int) -> [int, bool]:
     if index <= 3:
         return index, False
     if index == 4:  # white
-        pass
+        return 0, False
     if index == 5:  # black
-        pass
+        return 0, False
     if index == 6:  # 1-R
         return 0, True
     if index == 7:  # 1-G
@@ -83,6 +89,30 @@ hiMat.microsurface.setField('Invert;roughness', invert)
 hiMat.microsurface.getField("Roughness Map").sRGB = False
 hiMat.microsurface.getFieldNames()
 
+if int(recipe.metallicChannel) == 4:
+    hiMat.reflectivity.setField('Metalness', 1.0)
+    hiMat.reflectivity.setField('Metalness Map', '')
+    hiMat.reflectivity.setField('Channel', 0)
+    hiMat.reflectivity.setField('Invert', False)
+
+if int(recipe.metallicChannel) == 5:
+    hiMat.reflectivity.setField('Metalness', 0.0)
+    hiMat.reflectivity.setField('Metalness Map', '')
+    hiMat.reflectivity.setField('Channel', 0)
+    hiMat.reflectivity.setField('Invert', False)
+
+if int(recipe.roughnessChannel) == 4:
+    hiMat.microsurface.setField('Roughness', 1.0)
+    hiMat.microsurface.setField('Roughness Map', '')
+    hiMat.microsurface.setField('Channel', chIndex)
+    hiMat.microsurface.setField('Invert;roughness', False)
+
+if int(recipe.roughnessChannel) == 5:
+    hiMat.microsurface.setField('Roughness', 0.0)
+    hiMat.microsurface.setField('Roughness Map', '')
+    hiMat.microsurface.setField('Channel', chIndex)
+    hiMat.microsurface.setField('Invert;roughness', False)
+
 modelHi = mset.importModel(recipe.bakerMesh)
 modelHi.name = 'Quad_hi'
 modelLow = modelHi.duplicate('Quad_low')
@@ -103,8 +133,11 @@ modelHi.parent = bakerHigh
 modelLow.parent = bakerLow
 hiMat.assign(modelHi, True)
 
-mset.bakeAll()
-#mset.quit()
+if bool(int(recipe.doBake)):
+    mset.bakeAll()
+
+if bool(int(recipe.quitAfterBake)):
+    mset.quit()
 
 #print(recipe.albedoTexturePath, recipe.metallicTexturePath, recipe.metallicChannel, recipe.roughnessTexturePath,
 #      recipe.roughnessChannel, recipe.bakerMesh)

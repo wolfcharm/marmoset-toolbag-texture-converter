@@ -99,7 +99,6 @@ class RunParameters(object):
                 return False, key
         return True, None
 
-
 def Open(parameters: RunParameters, parent: QWidget):
     marmosetPath = StoredSettings.Settings.marmosetPath
     if exists(marmosetPath) & exists(StaticVariables.pyfile) & ('toolbag' in marmosetPath):

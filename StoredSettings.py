@@ -4,8 +4,8 @@ import StaticVariables
 
 class Settings:
     marmosetPath = ''
-    marmoset_doBake = '1'
-    marmoset_quitAfterBake = '1'
+    marmoset_doBake = ''
+    marmoset_quitAfterBake = ''
 
 def Init():
     Save()

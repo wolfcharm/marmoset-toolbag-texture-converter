@@ -1,10 +1,7 @@
 import sys
 import os
-from PyQt6.QtGui import QIcon
-
 import qdarktheme
 from os.path import exists
-from SettingsUI import *
 from MainUI import *
 
 def CheckMissingSettings():
@@ -37,6 +34,14 @@ if __name__ == '__main__':
         border-width: 3px;
         color: #003300;
         font-size: 11pt;
+        font-weight: bold;
+    }
+    QPushButton#save_btn {
+        background-color: #007700;
+        border-color: #008800;
+        border-width: 2px;
+        color: #003300;
+        font-size: 10pt;
         font-weight: bold;
     }
     QPushButton#run_btn:hover {

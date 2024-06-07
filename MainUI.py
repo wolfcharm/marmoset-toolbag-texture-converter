@@ -6,7 +6,7 @@ import StaticVariables
 import Opener
 from Opener import RunParameters
 from SettingsUI import *
-from CustomUIElements import TextureCard, TextureCardGrayscale
+from CustomUIElements import TextureCard, TextureCardGrayscale, ComboBoxSetting
 
 class MainUI(QMainWindow):
     def __init__(self):
@@ -30,8 +30,8 @@ class MainUI(QMainWindow):
         settingsLabel.setFont(headerFont)
         settingsLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
         bakeSettingsLayout.addWidget(settingsLabel)
-        self.bakerResolutionSetting = ComboBoxSettings('Resolution', StaticVariables.bakeResolutions, self, '2048')
-        self.bakerSamplesSetting = ComboBoxSettings('Samples', StaticVariables.bakeSamples, self, '16')
+        self.bakerResolutionSetting = ComboBoxSetting(self,'Resolution', StaticVariables.bakeResolutions, '2048', labelMinWidth=100)
+        self.bakerSamplesSetting = ComboBoxSetting(self, 'Samples', StaticVariables.bakeSamples, '16', labelMinWidth=100)
 
         bakeSettingsLayout.addLayout(self.bakerSamplesSetting)
         bakeSettingsLayout.addLayout(self.bakerResolutionSetting)

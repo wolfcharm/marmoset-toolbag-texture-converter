@@ -1,30 +1,107 @@
 
 from PyQt6.QtGui import QPixmap, QBitmap
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QObject
 
 import StaticVariables
 from SettingsUI import *
 
-
-class ComboBoxSettings(QHBoxLayout):
-    def __init__(self, labelText: str, comboOptions: list, parent, defaultOption: str = ''):
+class SavableSettingLayout(QHBoxLayout):
+    def __init__(self, parent, settingName: str = ''):
         super().__init__(parent)
+        self.settingName = settingName
 
-        self.label = QLabel(labelText, parent)
-        self.label.setMinimumSize(120, 8)
+class ComboBoxSetting(SavableSettingLayout):
+    def __init__(self, parent, labelText: str, comboOptions: list, defaultOption: str = '', settingName: str = '', labelMinWidth: int = 150):
+        super().__init__(parent, settingName)
+
+        label = QLabel(labelText, parent)
+        label.setMinimumSize(labelMinWidth, 8)
         self.dropdown = QComboBox(parent)
         self.dropdown.addItems(comboOptions)
         self.dropdown.setCursor(Qt.CursorShape.PointingHandCursor)
         if defaultOption != '':
             self.dropdown.setCurrentText(defaultOption)
-        self.addWidget(self.label)
+        self.addWidget(label)
         self.addWidget(self.dropdown)
+        self.addStretch()
 
     def get_selected_option_int(self) -> int:
         return self.dropdown.currentIndex()
 
     def get_selected_option_str(self) -> str:
         return self.dropdown.currentText()
+
+    def get_savable_option(self):
+        return str(self.get_selected_option_int())
+
+class CheckBoxSetting(SavableSettingLayout):
+    def __init__(self, parent, labelText: str, defaultOption: bool = False, settingName: str = '', labelMinWidth: int = 150):
+        super().__init__(parent, settingName)
+
+        label = QLabel(labelText, parent)
+        label.setMinimumSize(labelMinWidth, 8)
+        self.checkbox = QCheckBox(parent)
+        self.checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.checkbox.setChecked(defaultOption)
+        self.addWidget(label)
+        self.addWidget(self.checkbox)
+        self.addStretch()
+
+    def get_selected_option(self) -> bool:
+        return self.checkbox.isChecked()
+
+    def set_option(self, value: str):
+        if value == '1':
+            self.checkbox.setCheckState(Qt.CheckState.Checked)
+        if value == '0':
+            self.checkbox.setCheckState(Qt.CheckState.Unchecked)
+
+    def get_savable_option(self):
+        if self.get_selected_option():
+            return '1'
+        else:
+            return '0'
+
+class LinePathSetting(SavableSettingLayout):
+    def __init__(self, parent, labelText: str, defaultOption: str = '', settingName: str = '', labelMinWidth: int = 150):
+        super().__init__(parent, settingName)
+
+        label = QLabel(labelText, parent)
+        label.setMinimumSize(labelMinWidth, 8)
+        self.fieldPath = QLineEdit(parent)
+        self.fieldPath.setEnabled(False)
+        self.fieldPath.setText(defaultOption)
+        btnSelectMarmosetFile = QPushButton('Browse...', parent)
+        btnSelectMarmosetFile.setCursor(Qt.CursorShape.PointingHandCursor)
+        btnSelectMarmosetFile.clicked.connect(self.openFileDialog)
+        self.addWidget(label)
+        self.addWidget(self.fieldPath)
+        self.addWidget(btnSelectMarmosetFile)
+
+    def get_selected_option(self) -> str:
+        return self.fieldPath.text()
+
+    def set_option(self, value):
+        self.fieldPath.setText(str(value))
+
+    def get_savable_option(self):
+        return self.get_selected_option()
+
+    @pyqtSlot(name='selectExe')
+    def openFileDialog(self):
+        Debugger.debugger_print('pressed')
+        fileName = self.selectExe()
+        if not fileName:
+            return
+        else:
+            self.set_option(fileName)
+
+    def selectExe(self):
+        fileName, _ = QFileDialog.getOpenFileName(self, caption="Select toolbag.exe",
+                                                  directory=self.get_selected_option(),
+                                                  filter="Toolbag Application (toolbag.exe)")
+        if fileName:
+            return fileName
 
 class ImageChannel(QHBoxLayout):
     def __init__(self, labelName: str, selectionItems: list, parent):
@@ -70,7 +147,7 @@ class ImageChannelsGrayscale(QVBoxLayout):
             self.addSpacerItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding))
 
 class DropArea(QLabel):
-    def __init__(self, title: str, sizex: int, sizey: int, parent):
+    def __init__(self, parent: QObject, title: str, sizex: int, sizey: int):
         super().__init__(parent)
 
         self.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -105,7 +182,8 @@ class DropArea(QLabel):
 
     def openFileSelectDialog(self):
         filter_ = "Images (*{0})".format(' *'.join(StaticVariables.allowedImageFormats))
-        fileName, _ = QFileDialog.getOpenFileName(self, "Select Image", '',
+        dialog = QFileDialog(self)
+        fileName, _ = QFileDialog.getOpenFileName(dialog, "Select Image", '',
                                                   filter_)
         if fileName:
             return fileName
@@ -164,7 +242,7 @@ class TextureCard(QHBoxLayout):
         super().__init__(parent)
 
         textureCardHLayout = QHBoxLayout(parent)
-        self.dropArea = DropArea(title, previewsizex, previewsizey, parent)
+        self.dropArea = DropArea(parent, title, previewsizex, previewsizey)
         textureCardHLayout.addWidget(self.dropArea)
         self.textureChannelsVLayout = ImageChannels(displaychannelR, displaychannelG, displaychannelB, displaychannelA, parent)
 
@@ -183,7 +261,7 @@ class TextureCardGrayscale(QHBoxLayout):
     def __init__(self, title: str, previewsizex: int, previewsizey: int, displayGrayscale: bool, parent):
         super().__init__(parent)
         self.textureCardHLayout = QHBoxLayout(parent)
-        self.dropArea = DropArea(title, previewsizex, previewsizey, parent)
+        self.dropArea = DropArea(parent, title, previewsizex, previewsizey)
         self.textureCardHLayout.addWidget(self.dropArea)
         self.textureChannelsVLayout = ImageChannelsGrayscale(displayGrayscale, parent)
 

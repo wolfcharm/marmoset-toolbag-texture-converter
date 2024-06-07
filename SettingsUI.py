@@ -1,10 +1,10 @@
 from PyQt6.QtWidgets import *
-from PyQt6.QtCore import pyqtSlot, QRect
+from PyQt6.QtCore import pyqtSlot, QRect, Qt
 
 import StoredSettings
 from StoredSettings import Settings
 import Debugger
-from CustomUIElements import ComboBoxSettings
+from CustomUIElements import ComboBoxSetting, CheckBoxSetting, LinePathSetting
 
 Debugger.enabled = True
 
@@ -14,19 +14,11 @@ class SettingsWindow(QWidget):
         self.setWindowTitle("Settings")
         self.setMinimumSize(600, 50)
         #self.setGeometry(0, 0, 400, 400)
-        mainLayout = QVBoxLayout()
+        mainVLayout = QVBoxLayout(self)
 
-        marmosetSelectExeLayout = QHBoxLayout()
-        labelMarmosetPath = QLabel('Marmoset path', self)
-        self.fieldMarmosetPath = QLineEdit(self)
-        self.fieldMarmosetPath.setEnabled(False)
-        btnSelectMarmosetFile = QPushButton('Browse...', self)
-        btnSelectMarmosetFile.clicked.connect(self.openFileDialog)
-        marmosetSelectExeLayout.addWidget(labelMarmosetPath)
-        marmosetSelectExeLayout.addWidget(self.fieldMarmosetPath)
-        marmosetSelectExeLayout.addWidget(btnSelectMarmosetFile)
-
-        self.marmosetDoBakeSetting = ComboBoxSettings('Actually Bake', ['No', 'Yes'], self, 'Yes')
+        self.marmosetPathSetting = LinePathSetting(self, 'Marmoset Path', settingName='marmosetPath')
+        self.marmosetDoBakeSetting = CheckBoxSetting(self, 'Actually Bake', True, 'marmoset_doBake')
+        self.marmosetQuitAfterBakeSetting = CheckBoxSetting(self, 'Close Toolbag After Bake', True, 'marmoset_quitAfterBake')
 
         separator = QFrame(self)
         separator.setGeometry(QRect(0, 0, 100, 1))
@@ -35,33 +27,35 @@ class SettingsWindow(QWidget):
         saveBtnLayout = QHBoxLayout()
         btnSave = QPushButton('Save', self)
         btnSave.setMaximumWidth(100)
+        btnSave.setCursor(Qt.CursorShape.PointingHandCursor)
         btnSave.clicked.connect(self.saveSettings)
+        btnSave.setObjectName('save_btn')
         saveBtnLayout.addWidget(btnSave)
 
-        mainLayout.addLayout(marmosetSelectExeLayout)
-        mainLayout.addWidget(separator)
-        mainLayout.addLayout(saveBtnLayout)
-        self.setLayout(mainLayout)
-
-    @pyqtSlot(name='selectExe')
-    def openFileDialog(self):
-        Debugger.debugger_print('pressed')
-        fileName = self.selectExe()
-        if not fileName:
-            return
-        else:
-            self.fieldMarmosetPath.setText(fileName)
-
-    def selectExe(self):
-        fileName, _ = QFileDialog.getOpenFileName(self, "Select toolbag.exe", self.fieldMarmosetPath.text(),
-                                                  "Executable (*.exe)")
-        if fileName:
-            return fileName
+        mainVLayout.addLayout(self.marmosetPathSetting)
+        mainVLayout.addLayout(self.marmosetDoBakeSetting)
+        mainVLayout.addLayout(self.marmosetQuitAfterBakeSetting)
+        mainVLayout.addWidget(separator)
+        mainVLayout.addLayout(saveBtnLayout)
+        self.setLayout(mainVLayout)
 
     def saveSettings(self):
-        Settings.marmosetPath = self.fieldMarmosetPath.text()
+        members = vars(self)
+        for key in members.keys():
+            memberObj = getattr(self, key)
+            settingName = getattr(memberObj, 'settingName')
+            func = getattr(memberObj, 'get_savable_option')
+            result = func()
+            setattr(Settings, settingName, result)
+
         StoredSettings.Save()
         self.close()
 
     def update(self):
-        self.fieldMarmosetPath.setText(Settings.marmosetPath)
+        members = vars(self)
+        for key in members.keys():
+            memberObj = getattr(self, key)
+            settingName = getattr(memberObj, 'settingName')
+            savedValue = vars(Settings).get(settingName)
+            func = getattr(memberObj, 'set_option')
+            func(savedValue)

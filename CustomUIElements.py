@@ -1,5 +1,5 @@
-from PyQt6.QtGui import QPixmap, QBitmap, QFont, QPainter, QImage, QColor, QOpenGLContext, QAction, QCursor
-from PyQt6.QtCore import Qt, QObject, QPoint, pyqtSignal, QRectF
+from PyQt6.QtGui import QPixmap, QBitmap, QFont, QPainter, QAction, QCursor
+from PyQt6.QtCore import QPoint, pyqtSignal, QRectF
 from os.path import exists
 
 import StaticVariables

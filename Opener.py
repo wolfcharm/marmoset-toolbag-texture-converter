@@ -138,7 +138,8 @@ def RemoveRecipe():
     os.remove(bakerRecipe)
 
 def GetAbsolutePath(path):
-    if path[0] == '.' or '.' not in path or not os.path.isfile(path):
+    print(path)
+    if (path[0] == '.') or ('.' not in path) or (not os.path.isfile(path)):
         return path
 
     return os.path.abspath(path)

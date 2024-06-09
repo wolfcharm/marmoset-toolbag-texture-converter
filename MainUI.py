@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import QIcon, QFont
 from PyQt6.QtCore import pyqtSlot, Qt, QRect, QCoreApplication
+import qdarktheme
 
 import StaticVariables
 import Opener
@@ -47,7 +48,7 @@ class MainUI(QMainWindow):
         self.textureCardRough = TextureCardGrayscale('Roughness', 150, 150, True, self)
 
         self.fileMenu.addSeparator()
-        self.fileMenu.addAction("Quit", lambda: QCoreApplication.quit())
+        self.fileMenu.addAction("Quit", self.quitApplication)
 
         texturesCardsVLayout.addWidget(textureCardsLabel)
         texturesCardsVLayout.addLayout(self.textureCardAlb)
@@ -171,4 +172,20 @@ class MainUI(QMainWindow):
 
     def openSettings(self):
         self.settings.show()
-        self.settings.update()
+
+    def showMissingToolbagPath(self):
+        qdarktheme.setup_theme("auto")
+        popup = QMessageBox(self)
+        popup.setWindowTitle('Warning')
+        popup.setFixedSize(600, 200)
+        popup.setText("toolbag.exe not found. Do You want to specify path to Marmoset now?")
+        popup.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        result = popup.exec()
+        if result == QMessageBox.StandardButton.Yes:
+            self.openSettings()
+
+    def quitApplication(self):
+        QCoreApplication.quit()
+
+    def closeEvent(self, event):
+        self.quitApplication()

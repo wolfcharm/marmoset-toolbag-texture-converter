@@ -1,26 +1,7 @@
 import sys
-import os
 import qdarktheme
-from os.path import exists
 from MainUI import *
-
-def CheckMissingSettings():
-
-    path = os.getenv("SystemDrive")+"/Program Files/Marmoset/Toolbag 4/toolbag.exe"
-    if not Settings.marmosetPath:
-        if not exists(path):
-            qdarktheme.setup_theme("auto")
-            popup = QMessageBox(ui)
-            popup.setWindowTitle('Warning')
-            popup.setFixedSize(600, 200)
-            popup.setText("toolbag.exe not found. Dou You want to specify path to Marmoset now?")
-            popup.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
-            result = popup.exec()
-            if result == QMessageBox.StandardButton.Yes:
-                ui.openSettings()
-        else:
-            Settings.marmosetPath = path
-            StoredSettings.Save()
+import StoredSettings
 
 if __name__ == '__main__':
     qdarktheme.enable_hi_dpi()
@@ -52,7 +33,6 @@ if __name__ == '__main__':
     }
     """
     qdarktheme.setup_theme(additional_qss=qss, custom_colors={"primary": "#009900"})
-    StoredSettings.Init()
     ui = MainUI()
-    CheckMissingSettings()
+    StoredSettings.Init(ui)
     sys.exit(app.exec())

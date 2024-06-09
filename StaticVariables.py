@@ -7,3 +7,6 @@ configFile = 'settings.ini'
 pyfile = 'MarmosetBaker.py'
 defaultRecipeFile = 'data/.bakerRecipe'
 fancyParametersNames = {'_savePath': 'Save Location', '_saveName': 'Save Name'}
+transparencyTexture = 'data/transparency.png'
+textureWhite = 'data/white.tif'
+textureBlack = 'data/black.tif'

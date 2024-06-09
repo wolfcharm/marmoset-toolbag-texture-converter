@@ -1,20 +1,25 @@
 from configparser import ConfigParser
 import Debugger
 import StaticVariables
+import os
+from os.path import exists
+
+import main
 
 globalSectionName = 'Global'
 
 class Settings:
-    marmosetPath = ''
-    marmoset_doBake = ''
-    marmoset_quitAfterBake = ''
+    marmosetPath = os.getenv("SystemDrive")+"/Program Files/Marmoset/Toolbag 4/toolbag.exe"
+    marmoset_doBake = '1'
+    marmoset_quitAfterBake = '1'
 
-def Init():
-    config = ConfigParser(allow_no_value=True)
+def Init(parent):
+    config = ConfigParser()
     config.read(StaticVariables.configFile)
     SafeAddSection(config, globalSectionName)
-    Save()
+    InitializeParameters()
     Load()
+    CheckMissingSettings(parent)
 
 def Load():
     config = ConfigParser()
@@ -22,12 +27,11 @@ def Load():
 
     members = vars(Settings)
     for key in members.copy():
-        if (not key.startswith('__')) & (key != ''):
-            memberObj = getattr(Settings, key)
+        if (not key.startswith('_')) & (key != ''):
             valFromFile, success = SafeGetOption(config, globalSectionName, key)
             if not success:
                 Debugger.debugger_print(f'Option "[{globalSectionName}] {key}" in {StaticVariables.configFile} not found!')
-            setattr(Settings, memberObj, valFromFile)
+            setattr(Settings, key, valFromFile)
 
 def LoadArguments(section: str, arg: str, *args: str):
     config = ConfigParser()
@@ -55,9 +59,9 @@ def Save():
     config = ConfigParser()
     config.read(StaticVariables.configFile)
 
-    members = vars(Settings)
+    members = vars(Settings).copy()
     for key in members:
-        if (not key.startswith('__')) & (key != ''):
+        if (not key.startswith('_')) & (key != ''):
             value = getattr(Settings, key)
             SafeAddOption(config, globalSectionName, key, value)
 
@@ -78,3 +82,21 @@ def SafeGetOption(config: ConfigParser, section: str, name: str):
         return config.get(section, name), True
     else:
         return '', False
+
+def InitializeParameters():
+    config = ConfigParser()
+    config.read(StaticVariables.configFile)
+
+    members = vars(Settings).copy()
+    for key in members:
+        if (not key.startswith('_')) & (key != ''):
+            if not config.has_option(globalSectionName, key):
+                value = getattr(Settings, key)
+                SafeAddOption(config, globalSectionName, key, value)
+
+    with open(StaticVariables.configFile, 'w') as f:
+        config.write(f)
+
+def CheckMissingSettings(parent):
+    if not exists(Settings.marmosetPath):
+        parent.showMissingToolbagPath()

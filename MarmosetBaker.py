@@ -14,8 +14,8 @@ class Recipe(object):
         self.samples = ''
         self.resolution = ''
         self.bakerMesh = ''
-        self.doBake = 'True'
-        self.quitAfterBake = 'True'
+        self.doBake = '1'
+        self.quitAfterBake = '1'
         self.get_baker_recipe()
 
     # order:
@@ -133,11 +133,12 @@ modelHi.parent = bakerHigh
 modelLow.parent = bakerLow
 hiMat.assign(modelHi, True)
 
+print(bool(int(recipe.doBake)), bool(int(recipe.quitAfterBake)))
 if bool(int(recipe.doBake)):
     mset.bakeAll()
+    if bool(int(recipe.quitAfterBake)):
+        mset.quit()
 
-if bool(int(recipe.quitAfterBake)):
-    mset.quit()
 
 #print(recipe.albedoTexturePath, recipe.metallicTexturePath, recipe.metallicChannel, recipe.roughnessTexturePath,
 #      recipe.roughnessChannel, recipe.bakerMesh)

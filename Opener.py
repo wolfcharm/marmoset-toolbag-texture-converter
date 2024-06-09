@@ -115,7 +115,8 @@ def Open(parameters: RunParameters, parent: QWidget):
 
         PrepareRecipe(parameters.albedoTexturePath, parameters.metallicTexturePath, parameters.metallicChannel,
                       parameters.roughnessTexturePath, parameters.roughnessChannel, parameters.savePath, parameters.saveName,
-                      parameters.bakeSamples, parameters.bakeResolution, StaticVariables.bakerMesh, '0', '0')
+                      parameters.bakeSamples, parameters.bakeResolution, StaticVariables.bakerMesh,
+                      StoredSettings.Settings.marmoset_doBake, StoredSettings.Settings.marmoset_quitAfterBake)
 
         subprocess.run([marmosetPath, StaticVariables.pyfile, bakerRecipe])
         RemoveRecipe()
@@ -144,7 +145,7 @@ def GetAbsolutePath(path):
 
 if __name__ == '__main__':
 
-    PrepareRecipe('C:/Users/ichen/Desktop/wolf 100x100.png', '1str', 0, '1str', 0)
+    PrepareRecipe('C:/Users/ichen/Desktop/wolf 100x100.png', '1str', '1str')
     file = open('data/.bakerRecipe', 'r')
     albedoTexturePath = file.readline().rstrip('\n')
     metallicTexturePath = file.readline().rstrip('\n')

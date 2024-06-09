@@ -2,24 +2,34 @@ from configparser import ConfigParser
 import Debugger
 import StaticVariables
 
+globalSectionName = 'Global'
 class Settings:
     marmosetPath = ''
     marmoset_doBake = ''
     marmoset_quitAfterBake = ''
 
 def Init():
+    config = ConfigParser(allow_no_value=True)
+    config.read(StaticVariables.configFile)
+    SafeAddSection(config, globalSectionName)
     Save()
     Load()
 
 def Load():
-    config = ConfigParser(allow_no_value=True)
+    config = ConfigParser()
     config.read(StaticVariables.configFile)
-    Settings.marmosetPath = SafeGetOption(config, 'Paths', 'marmosetPath')
-    Settings.marmoset_doBake = SafeGetOption(config, 'Marmoset', 'marmoset_doBake')
-    Settings.marmoset_quitAfterBake = SafeGetOption(config, 'Marmoset', 'marmoset_quitAfterBake')
+
+    members = vars(Settings)
+    for key in members.copy():
+        if not key.startswith('__') & (key != ''):
+            memberObj = getattr(Settings, key)
+            valFromFile, success = SafeGetOption(config, globalSectionName, key)
+            if not success:
+                Debugger.debugger_print(f'Option "[{globalSectionName}] {key}" in {StaticVariables.configFile} not found!')
+            setattr(Settings, memberObj, valFromFile)
 
 def LoadArguments(section: str, arg: str, *args: str):
-    config = ConfigParser(allow_no_value=True)
+    config = ConfigParser()
     config.read(StaticVariables.configFile)
     if not config.has_section(section):
         Debugger.debugger_print('There is no section {0} in {1}'.format(section, StaticVariables.configFile))
@@ -43,29 +53,27 @@ def SaveArguments(section: str, namesValues: dict):
 def Save():
     config = ConfigParser()
     config.read(StaticVariables.configFile)
-    if Settings.marmosetPath != "":
-        SafeAddOption(config, 'Paths', 'marmosetPath', Settings.marmosetPath)
-    if Settings.marmoset_doBake != "":
-        SafeAddOption(config, 'Marmoset', 'marmoset_doBake', Settings.marmoset_doBake)
-    if Settings.marmoset_quitAfterBake != "":
-        SafeAddOption(config, 'Marmoset', 'marmoset_quitAfterBake', Settings.marmoset_quitAfterBake)
+
+    members = vars(Settings)
+    for key in members:
+        if (not key.startswith('__')) & (key != ''):
+            value = getattr(Settings, key)
+            SafeAddOption(config, globalSectionName, key, value)
+
     with open(StaticVariables.configFile, 'w') as f:
         config.write(f)
 
 def SafeAddSection(config, name: str):  # return True if section exist or was created successfully
     sections = config.sections()
-    if name in sections:
-        return True
-    else:
+    if name not in sections:
         config.add_section(name)
-        return True
 
 def SafeAddOption(config: ConfigParser, section: str, optionName: str, optionValue: str):
-    if SafeAddSection(config, section):
-        config.set(section, optionName, optionValue)
+    SafeAddSection(config, section)
+    config.set(section, optionName, optionValue)
 
 def SafeGetOption(config: ConfigParser, section: str, name: str):
     if config.has_option(section, name):
-        return config.get(section, name)
+        return config.get(section, name), True
     else:
-        return ''
+        return '', False

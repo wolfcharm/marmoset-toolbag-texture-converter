@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import *
-from PyQt6.QtGui import QIcon, QFont
-from PyQt6.QtCore import pyqtSlot, Qt, QRect, QCoreApplication
+from PyQt6.QtGui import QFont
+from PyQt6.QtCore import pyqtSlot, QCoreApplication
 import qdarktheme
 
 import StaticVariables

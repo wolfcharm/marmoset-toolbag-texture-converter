@@ -1,4 +1,5 @@
 import sys
+from PyQt6.QtGui import QIcon
 import qdarktheme
 from MainUI import *
 import StoredSettings

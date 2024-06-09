@@ -4,8 +4,6 @@ import StaticVariables
 import os
 from os.path import exists
 
-import main
-
 globalSectionName = 'Global'
 
 class Settings:

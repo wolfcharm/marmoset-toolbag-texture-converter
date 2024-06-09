@@ -12,7 +12,7 @@ class SettingsWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Settings")
-        self.setMinimumSize(600, 50)
+        self.setMinimumWidth(550)
         #self.setGeometry(0, 0, 400, 400)
         mainVLayout = QVBoxLayout(self)
 
@@ -48,6 +48,9 @@ class SettingsWindow(QWidget):
 
     def setHasChanges(self, value: bool):
         self._hasChanges = value
+
+    def showEvent(self, a0):
+        self.updateSettings()
 
     def saveSettings(self):
         members = vars(self)

@@ -25,6 +25,15 @@ class MainUI(QMainWindow):
         self.editMenu.addAction("Preferences...", self.openSettings)
         self.setMenuBar(menuBar)
 
+        # Separators
+        hSeparator = QFrame(self)
+        hSeparator.setGeometry(QRect(0, 0, 100, 1))
+        hSeparator.setFrameShape(QFrame.Shape.HLine)
+
+        vSeparator = QFrame(self)
+        vSeparator.setGeometry(QRect(0, 0, 1, 100))
+        vSeparator.setFrameShape(QFrame.Shape.VLine)
+
         # Bake Settings
         bakeSettingsLayout = QVBoxLayout(self)
         settingsLabel = QLabel('Bake Settings', self)
@@ -55,15 +64,6 @@ class MainUI(QMainWindow):
         texturesCardsVLayout.addLayout(self.textureCardMet)
         texturesCardsVLayout.addLayout(self.textureCardRough)
         texturesCardsVLayout.addStretch(1)
-
-        # Separators
-        hSeparator = QFrame(self)
-        hSeparator.setGeometry(QRect(0, 0, 100, 1))
-        hSeparator.setFrameShape(QFrame.Shape.HLine)
-
-        vSeparator = QFrame(self)
-        vSeparator.setGeometry(QRect(0, 0, 1, 100))
-        vSeparator.setFrameShape(QFrame.Shape.VLine)
 
         # Save Name
         saveNameHlayout = QHBoxLayout(self)

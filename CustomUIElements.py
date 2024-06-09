@@ -29,7 +29,6 @@ class ComboBoxSetting(SavableSettingLayout):
 
     def emitChanged(self):
         self.valueChanged.emit()
-        print(self.settingName, 'changed')
 
     def get_selected_option_int(self) -> int:
         return self.dropdown.currentIndex()
@@ -56,7 +55,6 @@ class CheckBoxSetting(SavableSettingLayout):
 
     def emitChanged(self):
         self.valueChanged.emit()
-        print(self.settingName, 'changed')
 
     def get_selected_option(self) -> bool:
         return self.checkbox.isChecked()
@@ -92,7 +90,6 @@ class LinePathSetting(SavableSettingLayout):
 
     def emitChanged(self):
         self.valueChanged.emit()
-        print(self.settingName, 'changed')
 
     def get_selected_option(self) -> str:
         return self.fieldPath.text()

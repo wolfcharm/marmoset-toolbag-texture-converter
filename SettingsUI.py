@@ -81,7 +81,6 @@ class SettingsWindow(QWidget):
         if self._hasChanges:
             popup = QMessageBox(self)
             popup.setWindowTitle('Saving')
-            popup.setFixedSize(600, 200)
             popup.setIcon(QMessageBox.Icon.Question)
             popup.setText("Do You want to save settings before leave?")
             popup.setStandardButtons(QMessageBox.StandardButton.Save | QMessageBox.StandardButton.No)

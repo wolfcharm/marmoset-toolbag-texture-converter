@@ -3,6 +3,7 @@ import Debugger
 import StaticVariables
 
 globalSectionName = 'Global'
+
 class Settings:
     marmosetPath = ''
     marmoset_doBake = ''
@@ -21,7 +22,7 @@ def Load():
 
     members = vars(Settings)
     for key in members.copy():
-        if not key.startswith('__') & (key != ''):
+        if (not key.startswith('__')) & (key != ''):
             memberObj = getattr(Settings, key)
             valFromFile, success = SafeGetOption(config, globalSectionName, key)
             if not success:
@@ -63,7 +64,7 @@ def Save():
     with open(StaticVariables.configFile, 'w') as f:
         config.write(f)
 
-def SafeAddSection(config, name: str):  # return True if section exist or was created successfully
+def SafeAddSection(config: ConfigParser, name: str):  # return True if section exist or was created successfully
     sections = config.sections()
     if name not in sections:
         config.add_section(name)

@@ -7,7 +7,7 @@ import StoredSettings
 if __name__ == '__main__':
     qdarktheme.enable_hi_dpi()
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon('data/icon.png'))
+    app.setWindowIcon(QIcon(StaticVariables.appIcon))
     qdarktheme.setup_theme("dark")
     qss = """
     QPushButton#run_btn, QPushButton#save_btn {

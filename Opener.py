@@ -100,7 +100,7 @@ class RunParameters(object):
         return True, None
 
 def Open(parameters: RunParameters, parent: QWidget):
-    marmosetPath = StoredSettings.Settings.marmosetPath
+    marmosetPath = StaticVariables.resource_path(StoredSettings.Settings.marmosetPath)
     if exists(marmosetPath) & exists(StaticVariables.pyfile) & ('toolbag' in marmosetPath):
         if (not parameters.albedoTexturePath) or (not parameters.metallicTexturePath) or (not parameters.roughnessTexturePath):
             parent.texturesSetErrorDialog()

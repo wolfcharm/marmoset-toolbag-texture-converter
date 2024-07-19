@@ -1,10 +1,10 @@
-from PyQt6.QtWidgets import *
-from PyQt6.QtCore import pyqtSlot, QRect, Qt
+from PyQt6.QtCore import QRect, Qt
+from PyQt6.QtWidgets import QVBoxLayout, QWidget, QFrame, QHBoxLayout, QPushButton, QMessageBox
 
-import StoredSettings
-from StoredSettings import Settings
 import Debugger
-from CustomUIElements import ComboBoxSetting, CheckBoxSetting, LinePathSetting
+import StoredSettings
+from CustomUIElements import CheckBoxSetting, LinePathSetting
+from StoredSettings import Settings
 
 Debugger.enabled = True
 

@@ -1,8 +1,12 @@
 import sys
-from PyQt6.QtGui import QIcon
+
 import qdarktheme
-from MainUI import *
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QApplication
+
+import StaticVariables
 import StoredSettings
+from MainUI import MainUI
 
 if __name__ == '__main__':
     qdarktheme.enable_hi_dpi()

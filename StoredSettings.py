@@ -1,8 +1,9 @@
+import os
 from configparser import ConfigParser
+from os.path import exists
+
 import Debugger
 import StaticVariables
-import os
-from os.path import exists
 
 globalSectionName = 'Global'
 

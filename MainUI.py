@@ -1,13 +1,13 @@
-from PyQt6.QtWidgets import *
+from PyQt6.QtCore import QCoreApplication
 from PyQt6.QtGui import QFont
-from PyQt6.QtCore import pyqtSlot, QCoreApplication
-import qdarktheme
+from PyQt6.QtWidgets import QMainWindow, QMenuBar, QLabel, QLineEdit, QComboBox, QFileDialog
 
-import StaticVariables
 import Opener
+import StaticVariables
+from CustomUIElements import TextureCard, TextureCardGrayscale, ComboBoxSetting
 from Opener import RunParameters
 from SettingsUI import *
-from CustomUIElements import TextureCard, TextureCardGrayscale, ComboBoxSetting
+
 
 class MainUI(QMainWindow):
     def __init__(self):
@@ -116,7 +116,6 @@ class MainUI(QMainWindow):
 
         self.settings = SettingsWindow()
 
-    @pyqtSlot()
     def showOpenErrorDialog(self):
         popup = QMessageBox(self)
         popup.setWindowTitle('Error!')
@@ -126,7 +125,6 @@ class MainUI(QMainWindow):
         popup.setStandardButtons(QMessageBox.StandardButton.Ok)
         popup.exec()
 
-    @pyqtSlot()
     def texturesSetErrorDialog(self):
         popup = QMessageBox(self)
         popup.setWindowTitle('Error!')
@@ -136,7 +134,6 @@ class MainUI(QMainWindow):
         popup.setStandardButtons(QMessageBox.StandardButton.Ok)
         popup.exec()
 
-    @pyqtSlot()
     def saveParametersErrorDialog(self, paramName: str):
         popup = QMessageBox(self)
         popup.setWindowTitle('Error!')
@@ -151,7 +148,6 @@ class MainUI(QMainWindow):
             if key == rawParameterName:
                 return value
 
-    @pyqtSlot(name='runprocess')
     def runProcess(self):
         runParams = RunParameters()
         runParams.albedoTexturePath = self.textureCardAlb.dropArea.filePath
@@ -174,7 +170,6 @@ class MainUI(QMainWindow):
         self.settings.show()
 
     def showMissingToolbagPath(self):
-        qdarktheme.setup_theme("auto")
         popup = QMessageBox(self)
         popup.setWindowTitle('Warning')
         popup.setFixedSize(600, 200)

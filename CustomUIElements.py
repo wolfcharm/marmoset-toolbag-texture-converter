@@ -1,9 +1,12 @@
-from PyQt6.QtGui import QPixmap, QBitmap, QFont, QPainter, QAction, QCursor
-from PyQt6.QtCore import QPoint, pyqtSignal, QRectF
 from os.path import exists
 
+from PyQt6.QtCore import Qt, QPoint, pyqtSignal, QRectF
+from PyQt6.QtGui import QPixmap, QBitmap, QFont, QPainter, QAction, QCursor
+from PyQt6.QtWidgets import QLabel, QComboBox, QCheckBox, QLineEdit, QFileDialog, QGraphicsColorizeEffect, QMenu, \
+    QSpacerItem, QSizePolicy, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+
+import Debugger
 import StaticVariables
-from SettingsUI import *
 
 class SavableSettingLayout(QHBoxLayout):
     valueChanged = pyqtSignal()
@@ -100,7 +103,6 @@ class LinePathSetting(SavableSettingLayout):
     def get_savable_option(self):
         return self.get_selected_option()
 
-    @pyqtSlot(name='selectExe')
     def openFileDialog(self):
         Debugger.debugger_print('pressed')
         fileName = self.selectExe()

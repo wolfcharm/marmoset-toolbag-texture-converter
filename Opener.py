@@ -1,10 +1,12 @@
-import os.path
+import os
 import subprocess
 from os.path import exists
+
 from PyQt6.QtWidgets import QWidget
+
+import Debugger
 import StaticVariables
 import StoredSettings
-import Debugger
 
 bakerRecipe = ''
 

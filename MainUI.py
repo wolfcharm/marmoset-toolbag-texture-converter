@@ -1,10 +1,10 @@
 from PyQt6.QtCore import QCoreApplication
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QMainWindow, QMenuBar, QLabel, QLineEdit, QComboBox, QFileDialog
+from PyQt6.QtWidgets import QMainWindow, QMenuBar, QLabel, QLineEdit, QComboBox, QFileDialog, QStackedWidget
 
 import Opener
 import StaticVariables
-from CustomUIElements import TextureCard, TextureCardGrayscale, ComboBoxSetting
+from CustomUIElements import TextureCardRGB, TextureCardGrayscale, ComboBoxSetting
 from Opener import RunParameters
 from SettingsUI import *
 
@@ -17,7 +17,6 @@ class MainUI(QMainWindow):
         mainWindow = QWidget(self)
         mainVLayout = QVBoxLayout(self)
         mainHLayout = QHBoxLayout(self)
-        texturesCardsVLayout = QVBoxLayout(self)
 
         menuBar = QMenuBar(self)
         self.fileMenu = menuBar.addMenu("File")
@@ -34,6 +33,17 @@ class MainUI(QMainWindow):
         vSeparator.setGeometry(QRect(0, 0, 1, 100))
         vSeparator.setFrameShape(QFrame.Shape.VLine)
 
+        # Pipeline selector
+        pipelineSelectionLayout = QVBoxLayout(self)
+        pipelineLabel = QLabel('Pipeline selection', self)
+        pipelineLabel.setFont(headerFont)
+        pipelineLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
+        pipelineSelectionLayout.addWidget(pipelineLabel)
+        self.pipelineSelection = ComboBoxSetting(self, '', StaticVariables.pipelines, StaticVariables.pipelines[0],
+                                                      labelMinWidth=100)
+        pipelineSelectionLayout.addLayout(self.pipelineSelection)
+        # pipelineSelectionLayout.addStretch()
+
         # Bake Settings
         bakeSettingsLayout = QVBoxLayout(self)
         settingsLabel = QLabel('Bake Settings', self)
@@ -48,21 +58,30 @@ class MainUI(QMainWindow):
         bakeSettingsLayout.addStretch()
 
         # Texture Cards
-        textureCardsLabel = QLabel('TextureCards', self)
+        texturesCardsVLayout = QVBoxLayout(self)
+        self.texturesCardsStackedWidget = QStackedWidget()
+        textureCardsLabel = QLabel('Texture Cards', self)
         textureCardsLabel.setFont(headerFont)
         textureCardsLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        self.textureCardAlb = TextureCard('Albedo', 150, 150, False, False, False, False, self)
-        self.textureCardMet = TextureCardGrayscale('Metal', 150, 150, True, self)
+        self.textureCardAlb = TextureCardRGB('Albedo', 150, 150, False, False, False, False, self)
+        self.textureCardMetal = TextureCardGrayscale('Metal', 150, 150, True, self)
         self.textureCardRough = TextureCardGrayscale('Roughness', 150, 150, True, self)
+        self.textureCardSpec = TextureCardRGB('Specular', 150, 150, False, False, False, False, self)
+        self.textureCardGloss = TextureCardGrayscale('Gloss', 150, 150, True, self)
+
+        metalToSpecCards = PipelineCards(self, self.textureCardMetal, self.textureCardRough)
+        specToMetalCards = PipelineCards(self, self.textureCardSpec, self.textureCardGloss)
 
         self.fileMenu.addSeparator()
         self.fileMenu.addAction("Quit", self.quitApplication)
 
         texturesCardsVLayout.addWidget(textureCardsLabel)
+        self.texturesCardsStackedWidget.addWidget(metalToSpecCards)
+        self.texturesCardsStackedWidget.addWidget(specToMetalCards)
+
         texturesCardsVLayout.addLayout(self.textureCardAlb)
-        texturesCardsVLayout.addLayout(self.textureCardMet)
-        texturesCardsVLayout.addLayout(self.textureCardRough)
+        texturesCardsVLayout.addWidget(self.texturesCardsStackedWidget)
         texturesCardsVLayout.addStretch(1)
 
         # Save Name
@@ -103,6 +122,8 @@ class MainUI(QMainWindow):
         mainHLayout.addWidget(vSeparator)
         mainHLayout.addLayout(bakeSettingsLayout)
         mainHLayout.addStretch()
+        mainVLayout.addLayout(pipelineSelectionLayout)
+        mainVLayout.addWidget(hSeparator)
         mainVLayout.addLayout(mainHLayout)
         mainVLayout.addWidget(hSeparator)
         mainVLayout.addLayout(saveNameHlayout)
@@ -115,6 +136,11 @@ class MainUI(QMainWindow):
         self.show()
 
         self.settings = SettingsWindow()
+        self.pipelineSelection.valueChanged.connect(lambda: self.changePipeline())
+        self.changePipeline()
+
+    def changePipeline(self):
+        self.texturesCardsStackedWidget.setCurrentIndex(self.pipelineSelection.get_selected_option_int())
 
     def showOpenErrorDialog(self):
         popup = QMessageBox(self)
@@ -147,14 +173,20 @@ class MainUI(QMainWindow):
         for key, value in StaticVariables.fancyParametersNames.items():
             if key == rawParameterName:
                 return value
+        return rawParameterName
+
 
     def runProcess(self):
         runParams = RunParameters()
+        runParams.pipeline = self.pipelineSelection.get_selected_option_int()
         runParams.albedoTexturePath = self.textureCardAlb.dropArea.filePath
-        runParams.metallicTexturePath = self.textureCardMet.dropArea.filePath
+        runParams.metallicTexturePath = self.textureCardMetal.dropArea.filePath
         runParams.roughnessTexturePath = self.textureCardRough.dropArea.filePath
-        runParams.metallicChannel = self.textureCardMet.get_active_channel()
+        runParams.metallicChannel = self.textureCardMetal.get_active_channel()
         runParams.roughnessChannel = self.textureCardRough.get_active_channel()
+        runParams.specularTexturePath = self.textureCardSpec.dropArea.filePath
+        runParams.glossTexturePath = self.textureCardGloss.dropArea.filePath
+        runParams.glossChannel = self.textureCardGloss.get_active_channel()
         runParams.saveName = self.saveNameField.text() + self.saveExtensionDropdown.currentText()
         runParams.savePath = self.savePathField.text()
         runParams.bakeSamples = self.bakerSamplesSetting.get_selected_option_str()
@@ -184,3 +216,14 @@ class MainUI(QMainWindow):
 
     def closeEvent(self, event):
         self.quitApplication()
+
+class PipelineCards(QWidget):
+    def __init__(self, parent, *cards: QWidget):
+        super().__init__(parent)
+
+        mainLayout = QVBoxLayout()
+        mainLayout.setContentsMargins(0, 0, 0, 0)
+        for layout in cards:
+            mainLayout.addLayout(layout)
+
+        self.setLayout(mainLayout)

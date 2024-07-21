@@ -3,7 +3,7 @@ from os.path import exists
 from PyQt6.QtCore import Qt, QPoint, pyqtSignal, QRectF
 from PyQt6.QtGui import QPixmap, QBitmap, QFont, QPainter, QAction, QCursor
 from PyQt6.QtWidgets import QLabel, QComboBox, QCheckBox, QLineEdit, QFileDialog, QGraphicsColorizeEffect, QMenu, \
-    QSpacerItem, QSizePolicy, QHBoxLayout, QPushButton, QVBoxLayout, QWidget
+    QSpacerItem, QSizePolicy, QHBoxLayout, QPushButton, QVBoxLayout, QWidget, QFrame
 
 import Debugger
 import StaticVariables
@@ -18,15 +18,16 @@ class ComboBoxSetting(SavableSettingLayout):
     def __init__(self, parent, labelText: str, comboOptions: list, defaultOption: str = '', settingName: str = '', labelMinWidth: int = 150):
         super().__init__(parent, settingName)
 
-        label = QLabel(labelText, parent)
-        label.setMinimumSize(labelMinWidth, 8)
         self.dropdown = QComboBox(parent)
         self.dropdown.addItems(comboOptions)
         self.dropdown.setCursor(Qt.CursorShape.PointingHandCursor)
         if defaultOption != '':
             self.dropdown.setCurrentText(defaultOption)
         self.dropdown.currentIndexChanged.connect(self.emitChanged)
-        self.addWidget(label)
+        if labelText != '':
+            label = QLabel(labelText, parent)
+            label.setMinimumSize(labelMinWidth, 8)
+            self.addWidget(label)
         self.addWidget(self.dropdown)
         self.addStretch()
 
@@ -139,7 +140,7 @@ class ImageChannel(QHBoxLayout):
     def indexChanged(self):
         self.currentIndexChanged.emit(self.selection.currentIndex())
 
-class ImageChannels(QVBoxLayout):
+class ImageChannelsRGBA(QVBoxLayout):
     def __init__(self, enableR: bool, enableG: bool, enableB: bool, enableA: bool, parent):
         super().__init__(parent)
 
@@ -354,15 +355,16 @@ class DropArea(QLabel):
     #     if e.button() == Qt.MouseButton.RightButton:
     #         self.clearPixmap()
 
-class TextureCard(QHBoxLayout):
+class TextureCardRGB(QHBoxLayout):
     def __init__(self, title: str, previewsizex: int, previewsizey: int, displaychannelR: bool, displaychannelG: bool, displaychannelB: bool, displaychannelA: bool, parent):
         super().__init__(parent)
+
 
         self.dropArea = DropArea(parent, title, previewsizex, previewsizey)
         self.addWidget(self.dropArea)
 
         infoArea = QVBoxLayout(parent)
-        self.textureChannelsVLayout = ImageChannels(displaychannelR, displaychannelG, displaychannelB, displaychannelA, parent)
+        self.textureChannelsVLayout = ImageChannelsRGBA(displaychannelR, displaychannelG, displaychannelB, displaychannelA, parent)
 
         headerFont = QFont('Futura', 11)
         label = QLabel(title, parent)

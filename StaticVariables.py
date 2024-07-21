@@ -13,12 +13,15 @@ allowedImageFormats = ['.jpg', '.png', '.tga', '.psd', '.psb', '.exr', '.hdr', '
 saveFormats = ['.psd', '.tga', '.png', '.jpg', '.jpeg']
 bakeResolutions = ['64', '128', '256', '512', '1024', '2048', '4096', '8192']
 bakeSamples = ['1', '4', '16', '64']
+pipelines = ['Metallic to Specular', 'Specular to Metallic']
 appIcon = resource_path('data/icon.ico')
 bakerMesh = resource_path('data/Quad.obj')
 configFile = 'settings.ini'
 pyfile = resource_path('data/MarmosetBaker.py')
 defaultRecipeFile = resource_path('data/.bakerRecipe')
-fancyParametersNames = {'_savePath': 'Save Location', '_saveName': 'Save Name'}
+fancyParametersNames = {'_savePath': 'Save Location', '_saveName': 'Save Name', '_albedoTexturePath': 'Albedo Texture',
+                        '_metallicTexturePath': 'Metal Texture', '_roughnessTexturePath': 'Roughness Texture',
+                        '_specularTexturePath': 'Specular Texture', '_glossTexturePath': 'Gloss Texture'}
 transparencyTexture = resource_path('data/transparency.png')
 textureWhite = resource_path('data/white.tif')
 textureBlack = resource_path('data/black.tif')

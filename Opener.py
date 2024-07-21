@@ -12,15 +12,27 @@ bakerRecipe = ''
 
 class RunParameters(object):
     def __init__(self):
+        self._pipeline: str = ''
+        self._saveName: str = ''
+        self._savePath: str = ''
         self._albedoTexturePath: str = ''
         self._metallicTexturePath: str = ''
         self._roughnessTexturePath: str = ''
         self._metallicChannel: str = ''
         self._roughnessChannel: str = ''
-        self._saveName: str = ''
-        self._savePath: str = ''
+        self._specularTexturePath: str = ''
+        self._glossTexturePath: str = ''
+        self._glossChannel: str = ''
         self._bakeSamples: str = ''
         self._bakeResolution: str = ''
+
+    @property
+    def pipeline(self):
+        return str(self._pipeline)
+
+    @pipeline.setter
+    def pipeline(self, value):
+        self._pipeline = str(value)
 
     @property
     def albedoTexturePath(self):
@@ -63,6 +75,30 @@ class RunParameters(object):
         self._roughnessChannel = str(value)
 
     @property
+    def specTexturePath(self):
+        return str(self._specularTexturePath)
+
+    @specTexturePath.setter
+    def specTexturePath(self, value):
+        self._specularTexturePath = str(value)
+
+    @property
+    def glossTexturePath(self):
+        return str(self._glossTexturePath)
+
+    @glossTexturePath.setter
+    def glossTexturePath(self, value):
+        self._glossTexturePath = str(value)
+
+    @property
+    def glossChannel(self):
+        return str(self._glossChannel)
+
+    @glossChannel.setter
+    def glossChannel(self, value):
+        self._glossChannel = str(value)
+
+    @property
     def savePath(self):
         return str(self._savePath)
 
@@ -97,28 +133,46 @@ class RunParameters(object):
     def validate(self):
         members = vars(self)
         for key, value in members.items():
-            if value == '':
+            if value == '' or value[0] == '.':
                 return False, key
         return True, None
 
 def Open(parameters: RunParameters, parent: QWidget):
     marmosetPath = StaticVariables.resource_path(StoredSettings.Settings.marmosetPath)
     if exists(marmosetPath) & exists(StaticVariables.pyfile) & ('toolbag' in marmosetPath):
-        if (not parameters.albedoTexturePath) or (not parameters.metallicTexturePath) or (not parameters.roughnessTexturePath):
-            parent.texturesSetErrorDialog()
-            Debugger.debugger_print('[Opener] Some textures are null')
-            return
 
-        valid, param = parameters.validate()
-        if not valid:
-            parent.saveParametersErrorDialog(param)
-            Debugger.debugger_print('[Opener] Some textures are null')
-            return
+        if parameters.pipeline == '0':
+            valid, param = parameters.validate()
+            if not valid:
+                if param == '_specularTexturePath' or param == '_glossTexturePath':
+                    pass
+                else:
+                    parent.saveParametersErrorDialog(param)
+                    Debugger.debugger_print(f'[Opener] Some textures are null: {param}')
+                    return
 
-        PrepareRecipe(parameters.albedoTexturePath, parameters.metallicTexturePath, parameters.metallicChannel,
-                      parameters.roughnessTexturePath, parameters.roughnessChannel, parameters.savePath, parameters.saveName,
-                      parameters.bakeSamples, parameters.bakeResolution, StaticVariables.bakerMesh,
-                      StoredSettings.Settings.marmoset_doBake, StoredSettings.Settings.marmoset_quitAfterBake)
+            PrepareRecipe(parameters.pipeline, parameters.albedoTexturePath, parameters.metallicTexturePath,
+                          parameters.metallicChannel, parameters.roughnessTexturePath, parameters.roughnessChannel,
+                          parameters.specTexturePath, parameters.glossTexturePath, parameters.glossChannel,
+                          parameters.savePath, parameters.saveName, parameters.bakeSamples, parameters.bakeResolution,
+                          StaticVariables.bakerMesh, StoredSettings.Settings.marmoset_doBake,
+                          StoredSettings.Settings.marmoset_quitAfterBake)
+
+        if parameters.pipeline == '1':
+            valid, param = parameters.validate()
+            if not valid:
+                if param == '_metallicTexturePath' or param == '_roughnessTexturePath':
+                    pass
+                else:
+                    parent.saveParametersErrorDialog(param)
+                    Debugger.debugger_print(f'[Opener] Some textures are null: {param}')
+                    return
+            PrepareRecipe(parameters.pipeline, parameters.albedoTexturePath, parameters.metallicTexturePath,
+                          parameters.metallicChannel, parameters.roughnessTexturePath, parameters.roughnessChannel,
+                          parameters.specTexturePath, parameters.glossTexturePath, parameters.glossChannel,
+                          parameters.savePath, parameters.saveName, parameters.bakeSamples, parameters.bakeResolution,
+                          StaticVariables.bakerMesh, StoredSettings.Settings.marmoset_doBake,
+                          StoredSettings.Settings.marmoset_quitAfterBake)
 
         subprocess.run([marmosetPath, StaticVariables.pyfile, bakerRecipe])
         RemoveRecipe()
@@ -130,7 +184,12 @@ def PrepareRecipe(*args: str):
     recipeFile.truncate(0)
 
     for arg in args:
-        recipeFile.write(GetAbsolutePath(arg)+'\n')
+        path = GetAbsolutePath(arg)
+        if path is None:
+            recipeFile.close()
+            os.remove(os.path.abspath(StaticVariables.defaultRecipeFile))
+            raise NotImplementedError('Bad path given to OS')
+        recipeFile.write(path+'\n')
 
     recipeFile.close()
     global bakerRecipe
@@ -140,11 +199,13 @@ def RemoveRecipe():
     os.remove(bakerRecipe)
 
 def GetAbsolutePath(path):
-    print(path)
-    if (path[0] == '.') or ('.' not in path) or (not os.path.isfile(path)):
-        return path
+    try:
+        if (path == '') or (path[0] == '.') or ('.' not in path) or (not os.path.isfile(path)):
+            return path
+        return os.path.abspath(path)
+    except:
+        return None
 
-    return os.path.abspath(path)
 
 if __name__ == '__main__':
 

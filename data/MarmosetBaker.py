@@ -5,11 +5,15 @@ print('Marmoset Texture Converter run parameters', sys.argv)
 
 class Recipe(object):
     def __init__(self):
+        self.pipeline = ''
         self.albedoTexturePath = ''
         self.metallicTexturePath = ''
         self.metallicChannel = ''
         self.roughnessTexturePath = ''
         self.roughnessChannel = ''
+        self.specTexturePath = ''
+        self.glossTexturePath = ''
+        self.glossChannel = ''
         self.outputPath = f' .png'
         self.samples = ''
         self.resolution = ''
@@ -18,12 +22,16 @@ class Recipe(object):
         self.quitAfterBake = '1'
         self.get_baker_recipe()
 
-    # order:
+    # order. see in Opener.py Open method
+    # pipeline
     # albedoTexturePath
     # metallicTexturePath
     # metallicChannel
     # roughnessTexturePath
     # roughnessChannel
+    # specTexturePath
+    # glossTexturePath
+    # glossChannel
     # savePath
     # saveName
     # bakeSamples
@@ -31,13 +39,18 @@ class Recipe(object):
     # bakerMesh
     # doBake
     # quitAfterBake
+
     def get_baker_recipe(self):
         file = open(sys.argv[1], 'r')
+        self.pipeline = file.readline().rstrip('\n')
         self.albedoTexturePath = file.readline().rstrip('\n')
         self.metallicTexturePath = file.readline().rstrip('\n')
         self.metallicChannel = file.readline().rstrip('\n')
         self.roughnessTexturePath = file.readline().rstrip('\n')
         self.roughnessChannel = file.readline().rstrip('\n')
+        self.specTexturePath = file.readline().rstrip('\n')
+        self.glossTexturePath = file.readline().rstrip('\n')
+        self.glossChannel = file.readline().rstrip('\n')
         self.outputPath = file.readline().rstrip('\n')
         saveName = file.readline().rstrip('\n')
         self.outputPath = f'{self.outputPath}{saveName}'

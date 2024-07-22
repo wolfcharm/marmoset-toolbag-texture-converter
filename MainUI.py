@@ -1,5 +1,3 @@
-import threading
-
 from PyQt6.QtCore import QCoreApplication, QThread, QObject, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QMainWindow, QMenuBar, QLabel, QLineEdit, QComboBox, QFileDialog, QStackedWidget

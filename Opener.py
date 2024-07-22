@@ -1,7 +1,6 @@
 import os
 import subprocess
-import time
-import threading
+from time import sleep
 from os.path import exists
 
 from PyQt6.QtWidgets import QWidget
@@ -176,7 +175,7 @@ def Open(parameters: RunParameters, parent: QWidget):
             parent.disableRunBtn()
 
             while proc.poll() is None:
-                time.sleep(1)
+                sleep(1)
 
         RemoveRecipe()
         parent.enableRunBtn()

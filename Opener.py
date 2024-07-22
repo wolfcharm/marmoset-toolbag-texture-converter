@@ -171,11 +171,8 @@ def Open(parameters: RunParameters, parent: QWidget):
         if StoredSettings.Settings.marmoset_quitAfterBake == '1':
             subprocess.run([marmosetPath, StaticVariables.pyfile, bakerRecipe])
         else:
-            proc = subprocess.Popen([marmosetPath, StaticVariables.pyfile, bakerRecipe], creationflags=8, close_fds=True, stdout=subprocess.PIPE)
             parent.disableRunBtn()
-
-            while proc.poll() is None:
-                sleep(1)
+            subprocess.run([marmosetPath, StaticVariables.pyfile, bakerRecipe])
 
         RemoveRecipe()
         parent.enableRunBtn()

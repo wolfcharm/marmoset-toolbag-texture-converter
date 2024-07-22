@@ -1,5 +1,7 @@
 import os
 import subprocess
+import time
+import threading
 from os.path import exists
 
 from PyQt6.QtWidgets import QWidget
@@ -20,7 +22,7 @@ class RunParameters(object):
         self._roughnessTexturePath: str = ''
         self._metallicChannel: str = ''
         self._roughnessChannel: str = ''
-        self._specularTexturePath: str = ''
+        self._specTexturePath: str = ''
         self._glossTexturePath: str = ''
         self._glossChannel: str = ''
         self._bakeSamples: str = ''
@@ -76,11 +78,11 @@ class RunParameters(object):
 
     @property
     def specTexturePath(self):
-        return str(self._specularTexturePath)
+        return str(self._specTexturePath)
 
     @specTexturePath.setter
     def specTexturePath(self, value):
-        self._specularTexturePath = str(value)
+        self._specTexturePath = str(value)
 
     @property
     def glossTexturePath(self):
@@ -144,19 +146,12 @@ def Open(parameters: RunParameters, parent: QWidget):
         if parameters.pipeline == '0':
             valid, param = parameters.validate()
             if not valid:
-                if param == '_specularTexturePath' or param == '_glossTexturePath':
+                if param == '_specTexturePath' or param == '_glossTexturePath':
                     pass
                 else:
-                    parent.saveParametersErrorDialog(param)
+                    parent.runErrSignal.emit(param)
                     Debugger.debugger_print(f'[Opener] Some textures are null: {param}')
                     return
-
-            PrepareRecipe(parameters.pipeline, parameters.albedoTexturePath, parameters.metallicTexturePath,
-                          parameters.metallicChannel, parameters.roughnessTexturePath, parameters.roughnessChannel,
-                          parameters.specTexturePath, parameters.glossTexturePath, parameters.glossChannel,
-                          parameters.savePath, parameters.saveName, parameters.bakeSamples, parameters.bakeResolution,
-                          StaticVariables.bakerMesh, StoredSettings.Settings.marmoset_doBake,
-                          StoredSettings.Settings.marmoset_quitAfterBake)
 
         if parameters.pipeline == '1':
             valid, param = parameters.validate()
@@ -164,20 +159,30 @@ def Open(parameters: RunParameters, parent: QWidget):
                 if param == '_metallicTexturePath' or param == '_roughnessTexturePath':
                     pass
                 else:
-                    parent.saveParametersErrorDialog(param)
+                    parent.runErrSignal.emit(param)
                     Debugger.debugger_print(f'[Opener] Some textures are null: {param}')
                     return
-            PrepareRecipe(parameters.pipeline, parameters.albedoTexturePath, parameters.metallicTexturePath,
-                          parameters.metallicChannel, parameters.roughnessTexturePath, parameters.roughnessChannel,
-                          parameters.specTexturePath, parameters.glossTexturePath, parameters.glossChannel,
-                          parameters.savePath, parameters.saveName, parameters.bakeSamples, parameters.bakeResolution,
-                          StaticVariables.bakerMesh, StoredSettings.Settings.marmoset_doBake,
-                          StoredSettings.Settings.marmoset_quitAfterBake)
+        PrepareRecipe(parameters.pipeline, parameters.albedoTexturePath, parameters.metallicTexturePath,
+                            parameters.metallicChannel, parameters.roughnessTexturePath, parameters.roughnessChannel,
+                            parameters.specTexturePath, parameters.glossTexturePath, parameters.glossChannel,
+                            parameters.savePath, parameters.saveName, parameters.bakeSamples, parameters.bakeResolution,
+                            StaticVariables.bakerMesh, StoredSettings.Settings.marmoset_doBake,
+                            StoredSettings.Settings.marmoset_quitAfterBake)
 
-        subprocess.run([marmosetPath, StaticVariables.pyfile, bakerRecipe])
+        if StoredSettings.Settings.marmoset_quitAfterBake == '1':
+            subprocess.run([marmosetPath, StaticVariables.pyfile, bakerRecipe])
+        else:
+            proc = subprocess.Popen([marmosetPath, StaticVariables.pyfile, bakerRecipe], creationflags=8, close_fds=True, stdout=subprocess.PIPE)
+            parent.disableRunBtn()
+
+            while proc.poll() is None:
+                time.sleep(1)
+
         RemoveRecipe()
+        parent.enableRunBtn()
     else:
         parent.showOpenErrorDialog()
+
 
 def PrepareRecipe(*args: str):
     recipeFile = open(StaticVariables.defaultRecipeFile, "a+")
@@ -208,14 +213,6 @@ def GetAbsolutePath(path):
 
 
 if __name__ == '__main__':
-
-    PrepareRecipe('C:/Users/ichen/Desktop/wolf 100x100.png', '1str', '1str')
-    file = open('data/.bakerRecipe', 'r')
-    albedoTexturePath = file.readline().rstrip('\n')
-    metallicTexturePath = file.readline().rstrip('\n')
-    metallicChannel = file.readline().rstrip('\n')
-    roughnessTexturePath = file.readline().rstrip('\n')
-    roughnessChannel = file.readline().rstrip('\n')
-    file.close()
+    pass
 
 

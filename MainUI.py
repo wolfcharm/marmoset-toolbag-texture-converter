@@ -1,4 +1,6 @@
-from PyQt6.QtCore import QCoreApplication
+import threading
+
+from PyQt6.QtCore import QCoreApplication, QThread, QObject, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QMainWindow, QMenuBar, QLabel, QLineEdit, QComboBox, QFileDialog, QStackedWidget
 
@@ -9,10 +11,16 @@ from Opener import RunParameters
 from SettingsUI import *
 
 
+
 class MainUI(QMainWindow):
+    runErrSignal = pyqtSignal(str)
     def __init__(self):
         super(MainUI, self).__init__()
-
+        self.thread = QThread()
+        self.worker = Worker()
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
         headerFont = QFont('Futura', 12)
         mainWindow = QWidget(self)
         mainVLayout = QVBoxLayout(self)
@@ -73,8 +81,10 @@ class MainUI(QMainWindow):
         metalToSpecCards = PipelineCards(self, self.textureCardMetal, self.textureCardRough)
         specToMetalCards = PipelineCards(self, self.textureCardSpec, self.textureCardGloss)
 
+        self.menuRunAct = self.fileMenu.addAction("Run", self.runProcess)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction("Quit", self.quitApplication)
+
 
         texturesCardsVLayout.addWidget(textureCardsLabel)
         self.texturesCardsStackedWidget.addWidget(metalToSpecCards)
@@ -110,12 +120,21 @@ class MainUI(QMainWindow):
         savePathHlayout.addWidget(self.savePathField)
         savePathHlayout.addWidget(btn_browseSavePath)
 
+        self.runBtnStackedWidget = QStackedWidget()
         # Run Button
-        buttonRun = QPushButton('Run', self)
-        buttonRun.setFixedHeight(32)
-        buttonRun.setObjectName('run_btn')
-        buttonRun.setCursor(Qt.CursorShape.PointingHandCursor)
-        buttonRun.clicked.connect(self.runProcess)
+        self.buttonRun = QPushButton('Run', self)
+        self.buttonRun.setFixedHeight(32)
+        self.buttonRun.setObjectName('run_btn')
+        self.buttonRun.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.buttonRun.clicked.connect(self.runProcess)
+
+        # Disabled Run Button
+        self.buttonRunning = QPushButton('Running...', self)
+        self.buttonRunning.setObjectName('disabled_run_btn')
+        self.buttonRunning.setFixedHeight(32)
+
+        self.runBtnStackedWidget.addWidget(self.buttonRun)
+        self.runBtnStackedWidget.addWidget(self.buttonRunning)
 
         # Main Layout Compose
         mainHLayout.addLayout(texturesCardsVLayout)
@@ -128,7 +147,7 @@ class MainUI(QMainWindow):
         mainVLayout.addWidget(hSeparator)
         mainVLayout.addLayout(saveNameHlayout)
         mainVLayout.addLayout(savePathHlayout)
-        mainVLayout.addWidget(buttonRun)
+        mainVLayout.addWidget(self.runBtnStackedWidget)
         mainWindow.setLayout(mainVLayout)
         self.setCentralWidget(mainWindow)
         self.setGeometry(300, 300, 400, 0)
@@ -138,6 +157,8 @@ class MainUI(QMainWindow):
         self.settings = SettingsWindow()
         self.pipelineSelection.valueChanged.connect(lambda: self.changePipeline())
         self.changePipeline()
+        self.enableRunBtn()
+        self.runErrSignal.connect(self.runErrorDialog)
 
     def changePipeline(self):
         self.texturesCardsStackedWidget.setCurrentIndex(self.pipelineSelection.get_selected_option_int())
@@ -160,7 +181,7 @@ class MainUI(QMainWindow):
         popup.setStandardButtons(QMessageBox.StandardButton.Ok)
         popup.exec()
 
-    def saveParametersErrorDialog(self, paramName: str):
+    def runErrorDialog(self, paramName: str):
         popup = QMessageBox(self)
         popup.setWindowTitle('Error!')
         popup.setIcon(QMessageBox.Icon.Critical)
@@ -168,6 +189,7 @@ class MainUI(QMainWindow):
         popup.setText(f"Some parameters are empty! Please fill them out:\n{self.nicify_parameter_names(paramName)}")
         popup.setStandardButtons(QMessageBox.StandardButton.Ok)
         popup.exec()
+
 
     def nicify_parameter_names(self, rawParameterName: str):
         for key, value in StaticVariables.fancyParametersNames.items():
@@ -184,14 +206,16 @@ class MainUI(QMainWindow):
         runParams.roughnessTexturePath = self.textureCardRough.dropArea.filePath
         runParams.metallicChannel = self.textureCardMetal.get_active_channel()
         runParams.roughnessChannel = self.textureCardRough.get_active_channel()
-        runParams.specularTexturePath = self.textureCardSpec.dropArea.filePath
+        runParams.specTexturePath = self.textureCardSpec.dropArea.filePath
         runParams.glossTexturePath = self.textureCardGloss.dropArea.filePath
         runParams.glossChannel = self.textureCardGloss.get_active_channel()
         runParams.saveName = self.saveNameField.text() + self.saveExtensionDropdown.currentText()
         runParams.savePath = self.savePathField.text()
         runParams.bakeSamples = self.bakerSamplesSetting.get_selected_option_str()
         runParams.bakeResolution = self.bakerResolutionSetting.get_selected_option_str()
-        Opener.Open(runParams, self)
+        self.worker.runParams = runParams
+        self.worker.parent = self
+        self.thread.start()
 
     def selectSavePath(self):
         savePath_ = str(QFileDialog.getExistingDirectory(self, "Select Save Directory"))
@@ -211,11 +235,30 @@ class MainUI(QMainWindow):
         if result == QMessageBox.StandardButton.Yes:
             self.openSettings()
 
+    def disableRunBtn(self):
+        self.runBtnStackedWidget.setCurrentIndex(1)
+        self.menuRunAct.setEnabled(False)
+
+    def enableRunBtn(self):
+        self.runBtnStackedWidget.setCurrentIndex(0)
+        self.menuRunAct.setEnabled(True)
+
+
     def quitApplication(self):
         QCoreApplication.quit()
 
     def closeEvent(self, event):
         self.quitApplication()
+
+class Worker(QObject):
+    finished = pyqtSignal()
+    def __init__(self):
+        super().__init__()
+        self.runParams = None
+        self.parent = None
+    def run(self):
+        Opener.Open(self.runParams, self.parent)
+        self.finished.emit()
 
 class PipelineCards(QWidget):
     def __init__(self, parent, *cards: QWidget):

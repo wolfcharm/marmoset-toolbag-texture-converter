@@ -22,6 +22,16 @@ if __name__ == '__main__':
         font-size: 11pt;
         font-weight: bold;
     }
+    
+    QPushButton#disabled_run_btn{
+        background-color: #333;
+        border-color: #0022200;
+        border-width: 3px;
+        color: #555;
+        font-size: 11pt;
+        font-weight: bold;
+    }
+    
     QPushButton#save_btn {
         border-width: 2px;
         font-size: 10pt;

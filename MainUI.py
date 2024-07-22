@@ -1,23 +1,30 @@
-from PyQt6.QtCore import QCoreApplication
+import threading
+
+from PyQt6.QtCore import QCoreApplication, QThread, QObject, pyqtSignal
 from PyQt6.QtGui import QFont
-from PyQt6.QtWidgets import QMainWindow, QMenuBar, QLabel, QLineEdit, QComboBox, QFileDialog
+from PyQt6.QtWidgets import QMainWindow, QMenuBar, QLabel, QLineEdit, QComboBox, QFileDialog, QStackedWidget
 
 import Opener
 import StaticVariables
-from CustomUIElements import TextureCard, TextureCardGrayscale, ComboBoxSetting
+from CustomUIElements import TextureCardRGB, TextureCardGrayscale, ComboBoxSetting
 from Opener import RunParameters
 from SettingsUI import *
 
 
+
 class MainUI(QMainWindow):
+    runErrSignal = pyqtSignal(str)
     def __init__(self):
         super(MainUI, self).__init__()
-
+        self.thread = QThread()
+        self.worker = Worker()
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.run)
+        self.worker.finished.connect(self.thread.quit)
         headerFont = QFont('Futura', 12)
         mainWindow = QWidget(self)
         mainVLayout = QVBoxLayout(self)
         mainHLayout = QHBoxLayout(self)
-        texturesCardsVLayout = QVBoxLayout(self)
 
         menuBar = QMenuBar(self)
         self.fileMenu = menuBar.addMenu("File")
@@ -34,6 +41,17 @@ class MainUI(QMainWindow):
         vSeparator.setGeometry(QRect(0, 0, 1, 100))
         vSeparator.setFrameShape(QFrame.Shape.VLine)
 
+        # Pipeline selector
+        pipelineSelectionLayout = QVBoxLayout(self)
+        pipelineLabel = QLabel('Pipeline selection', self)
+        pipelineLabel.setFont(headerFont)
+        pipelineLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
+        pipelineSelectionLayout.addWidget(pipelineLabel)
+        self.pipelineSelection = ComboBoxSetting(self, '', StaticVariables.pipelines, StaticVariables.pipelines[0],
+                                                      labelMinWidth=100)
+        pipelineSelectionLayout.addLayout(self.pipelineSelection)
+        # pipelineSelectionLayout.addStretch()
+
         # Bake Settings
         bakeSettingsLayout = QVBoxLayout(self)
         settingsLabel = QLabel('Bake Settings', self)
@@ -48,21 +66,32 @@ class MainUI(QMainWindow):
         bakeSettingsLayout.addStretch()
 
         # Texture Cards
-        textureCardsLabel = QLabel('TextureCards', self)
+        texturesCardsVLayout = QVBoxLayout(self)
+        self.texturesCardsStackedWidget = QStackedWidget()
+        textureCardsLabel = QLabel('Texture Cards', self)
         textureCardsLabel.setFont(headerFont)
         textureCardsLabel.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        self.textureCardAlb = TextureCard('Albedo', 150, 150, False, False, False, False, self)
-        self.textureCardMet = TextureCardGrayscale('Metal', 150, 150, True, self)
+        self.textureCardAlb = TextureCardRGB('Albedo', 150, 150, False, False, False, False, self)
+        self.textureCardMetal = TextureCardGrayscale('Metal', 150, 150, True, self)
         self.textureCardRough = TextureCardGrayscale('Roughness', 150, 150, True, self)
+        self.textureCardSpec = TextureCardRGB('Specular', 150, 150, False, False, False, False, self)
+        self.textureCardGloss = TextureCardGrayscale('Gloss', 150, 150, True, self)
 
+        metalToSpecCards = PipelineCards(self, self.textureCardMetal, self.textureCardRough)
+        specToMetalCards = PipelineCards(self, self.textureCardSpec, self.textureCardGloss)
+
+        self.menuRunAct = self.fileMenu.addAction("Run", self.runProcess)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction("Quit", self.quitApplication)
 
+
         texturesCardsVLayout.addWidget(textureCardsLabel)
+        self.texturesCardsStackedWidget.addWidget(metalToSpecCards)
+        self.texturesCardsStackedWidget.addWidget(specToMetalCards)
+
         texturesCardsVLayout.addLayout(self.textureCardAlb)
-        texturesCardsVLayout.addLayout(self.textureCardMet)
-        texturesCardsVLayout.addLayout(self.textureCardRough)
+        texturesCardsVLayout.addWidget(self.texturesCardsStackedWidget)
         texturesCardsVLayout.addStretch(1)
 
         # Save Name
@@ -91,23 +120,34 @@ class MainUI(QMainWindow):
         savePathHlayout.addWidget(self.savePathField)
         savePathHlayout.addWidget(btn_browseSavePath)
 
+        self.runBtnStackedWidget = QStackedWidget()
         # Run Button
-        buttonRun = QPushButton('Run', self)
-        buttonRun.setFixedHeight(32)
-        buttonRun.setObjectName('run_btn')
-        buttonRun.setCursor(Qt.CursorShape.PointingHandCursor)
-        buttonRun.clicked.connect(self.runProcess)
+        self.buttonRun = QPushButton('Run', self)
+        self.buttonRun.setFixedHeight(32)
+        self.buttonRun.setObjectName('run_btn')
+        self.buttonRun.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.buttonRun.clicked.connect(self.runProcess)
+
+        # Disabled Run Button
+        self.buttonRunning = QPushButton('Running...', self)
+        self.buttonRunning.setObjectName('disabled_run_btn')
+        self.buttonRunning.setFixedHeight(32)
+
+        self.runBtnStackedWidget.addWidget(self.buttonRun)
+        self.runBtnStackedWidget.addWidget(self.buttonRunning)
 
         # Main Layout Compose
         mainHLayout.addLayout(texturesCardsVLayout)
         mainHLayout.addWidget(vSeparator)
         mainHLayout.addLayout(bakeSettingsLayout)
         mainHLayout.addStretch()
+        mainVLayout.addLayout(pipelineSelectionLayout)
+        mainVLayout.addWidget(hSeparator)
         mainVLayout.addLayout(mainHLayout)
         mainVLayout.addWidget(hSeparator)
         mainVLayout.addLayout(saveNameHlayout)
         mainVLayout.addLayout(savePathHlayout)
-        mainVLayout.addWidget(buttonRun)
+        mainVLayout.addWidget(self.runBtnStackedWidget)
         mainWindow.setLayout(mainVLayout)
         self.setCentralWidget(mainWindow)
         self.setGeometry(300, 300, 400, 0)
@@ -115,6 +155,13 @@ class MainUI(QMainWindow):
         self.show()
 
         self.settings = SettingsWindow()
+        self.pipelineSelection.valueChanged.connect(lambda: self.changePipeline())
+        self.changePipeline()
+        self.enableRunBtn()
+        self.runErrSignal.connect(self.runErrorDialog)
+
+    def changePipeline(self):
+        self.texturesCardsStackedWidget.setCurrentIndex(self.pipelineSelection.get_selected_option_int())
 
     def showOpenErrorDialog(self):
         popup = QMessageBox(self)
@@ -134,7 +181,7 @@ class MainUI(QMainWindow):
         popup.setStandardButtons(QMessageBox.StandardButton.Ok)
         popup.exec()
 
-    def saveParametersErrorDialog(self, paramName: str):
+    def runErrorDialog(self, paramName: str):
         popup = QMessageBox(self)
         popup.setWindowTitle('Error!')
         popup.setIcon(QMessageBox.Icon.Critical)
@@ -143,23 +190,32 @@ class MainUI(QMainWindow):
         popup.setStandardButtons(QMessageBox.StandardButton.Ok)
         popup.exec()
 
+
     def nicify_parameter_names(self, rawParameterName: str):
         for key, value in StaticVariables.fancyParametersNames.items():
             if key == rawParameterName:
                 return value
+        return rawParameterName
+
 
     def runProcess(self):
         runParams = RunParameters()
+        runParams.pipeline = self.pipelineSelection.get_selected_option_int()
         runParams.albedoTexturePath = self.textureCardAlb.dropArea.filePath
-        runParams.metallicTexturePath = self.textureCardMet.dropArea.filePath
+        runParams.metallicTexturePath = self.textureCardMetal.dropArea.filePath
         runParams.roughnessTexturePath = self.textureCardRough.dropArea.filePath
-        runParams.metallicChannel = self.textureCardMet.get_active_channel()
+        runParams.metallicChannel = self.textureCardMetal.get_active_channel()
         runParams.roughnessChannel = self.textureCardRough.get_active_channel()
+        runParams.specTexturePath = self.textureCardSpec.dropArea.filePath
+        runParams.glossTexturePath = self.textureCardGloss.dropArea.filePath
+        runParams.glossChannel = self.textureCardGloss.get_active_channel()
         runParams.saveName = self.saveNameField.text() + self.saveExtensionDropdown.currentText()
         runParams.savePath = self.savePathField.text()
         runParams.bakeSamples = self.bakerSamplesSetting.get_selected_option_str()
         runParams.bakeResolution = self.bakerResolutionSetting.get_selected_option_str()
-        Opener.Open(runParams, self)
+        self.worker.runParams = runParams
+        self.worker.parent = self
+        self.thread.start()
 
     def selectSavePath(self):
         savePath_ = str(QFileDialog.getExistingDirectory(self, "Select Save Directory"))
@@ -179,8 +235,38 @@ class MainUI(QMainWindow):
         if result == QMessageBox.StandardButton.Yes:
             self.openSettings()
 
+    def disableRunBtn(self):
+        self.runBtnStackedWidget.setCurrentIndex(1)
+        self.menuRunAct.setEnabled(False)
+
+    def enableRunBtn(self):
+        self.runBtnStackedWidget.setCurrentIndex(0)
+        self.menuRunAct.setEnabled(True)
+
+
     def quitApplication(self):
         QCoreApplication.quit()
 
     def closeEvent(self, event):
         self.quitApplication()
+
+class Worker(QObject):
+    finished = pyqtSignal()
+    def __init__(self):
+        super().__init__()
+        self.runParams = None
+        self.parent = None
+    def run(self):
+        Opener.Open(self.runParams, self.parent)
+        self.finished.emit()
+
+class PipelineCards(QWidget):
+    def __init__(self, parent, *cards: QWidget):
+        super().__init__(parent)
+
+        mainLayout = QVBoxLayout()
+        mainLayout.setContentsMargins(0, 0, 0, 0)
+        for layout in cards:
+            mainLayout.addLayout(layout)
+
+        self.setLayout(mainLayout)
